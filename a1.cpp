@@ -188,8 +188,9 @@ SDoublePlane flipper(const SDoublePlane &input )
   return output;
 }
 
-SDoublePlane createFilter(SDoublePlane gFilter)
+SDoublePlane createFilter()
 {
+    SDoublePlane gFilter(5,5);
     // initialization of standard deviation to 1.0
     double sigma = 1.0;
     double r, s = 2.0 * sigma * sigma;
@@ -215,6 +216,30 @@ SDoublePlane createFilter(SDoublePlane gFilter)
     return gFilter;
     
 }
+
+SDoublePlane binaryImgGen(SDoublePlane input, int threshold)
+{
+    SDoublePlane output(input.rows(), input.cols());
+    
+    for (int i = 0; i < input.rows(); i++)
+    {
+        for (int j = 0; j < input.cols(); j++)
+        {
+            if(input[i][j]<threshold)
+            {
+                
+                output[i][j] = 0;
+            }
+            else
+            {
+                output[i][j] = 255;
+            }
+            
+        }
+    }
+    return output;
+}
+
 //
 // This main file just outputs a few test images. You'll want to change it to do 
 //  something more interesting!
@@ -237,11 +262,15 @@ int main(int argc, char *argv[])
       mean_filter[i][j] = 1/9.0;
 
     SDoublePlane gFilter(5,5);
-    gFilter = createFilter(gFilter);
+    gFilter = createFilter();
 
   SDoublePlane output_image = convolve_general(input_image, gFilter);
 
   SImageIO::write_png_file("Blurred.png", output_image, output_image, output_image);
+
+  SDoublePlane output_image1 = binaryImgGen(output_image, 200);
+    
+  SImageIO::write_png_file("Threshold.png", output_image1, output_image1, output_image1);
 
   //SDoublePlane output_image = flipper(mean_filter); for testing the flipper function
   //compute the distance function
