@@ -192,17 +192,9 @@ int main(int argc, char *argv[])
   for(int i=0; i<3; i++)
     for(int j=0; j<3; j++)
       mean_filter[i][j] = 1/9.0;
-  mean_filter[0][0] = 1;
-  mean_filter[0][1] = 2;
-  mean_filter[0][2] = 3;
-  mean_filter[1][0] = 4;
-  mean_filter[1][1] = 5;
-  mean_filter[1][2] = 6;
-  mean_filter[2][0] = 7;
-  mean_filter[2][1] = 8;
-  mean_filter[2][2] = 9;
-  //SDoublePlane output_image = convolve_general(input_image, mean_filter);
-  SDoublePlane output_image = flipper(mean_filter);
+
+  SDoublePlane output_image = convolve_general(input_image, mean_filter);
+  //SDoublePlane output_image = flipper(mean_filter); for testing the flipper function
   
   // randomly generate some detected symbols -- you'll want to replace this
   //  with your symbol detection code obviously!
