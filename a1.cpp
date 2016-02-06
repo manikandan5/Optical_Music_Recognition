@@ -6,6 +6,7 @@
 #include <fstream>
 #include <vector>
 #include <DrawText.h>
+#include <cmath>
 
 using namespace std;
 
@@ -129,9 +130,23 @@ SDoublePlane convolve_separable(const SDoublePlane &input, const SDoublePlane &r
 SDoublePlane convolve_general(const SDoublePlane &input, const SDoublePlane &filter)
 {
   SDoublePlane output(input.rows(), input.cols());
-  // Convolution code here
-  
-  return output;
+    
+    for (int i = 2; i < input.rows()-2; i++)
+    {
+        for (int j = 2; j < input.cols()-2; j++)
+        {
+            
+            for (int ki = -2; ki < 3; ki++ )
+            {
+                for (int kj = -2; kj<3; kj++)
+                {
+                    output[i][j] = output[i][j] + filter[ki+2][kj+2] * input[i - ki][j - kj];
+                    
+                }
+            }
+        }
+    }
+    return output;
 }
 
 
@@ -172,6 +187,34 @@ SDoublePlane flipper(const SDoublePlane &input )
   }
   return output;
 }
+
+SDoublePlane createFilter(SDoublePlane gFilter)
+{
+    // initialization of standard deviation to 1.0
+    double sigma = 1.0;
+    double r, s = 2.0 * sigma * sigma;
+    
+    // sum is for normalization
+    double sum = 0.0;
+    
+    for (int x = -2; x <= 2; x++)
+    {
+        for(int y = -2; y <= 2; y++)
+        {
+            r = sqrt(x*x + y*y);
+            gFilter[x + 2][y + 2] = (exp(-(r*r)/s))/(M_PI * s);
+            sum += gFilter[x + 2][y + 2];
+        }
+    }
+    
+    // normalize the Kernel
+    for(int i = 0; i < 5; ++i)
+        for(int j = 0; j < 5; ++j)
+            gFilter[i][j] /= sum;
+    
+    return gFilter;
+    
+}
 //
 // This main file just outputs a few test images. You'll want to change it to do 
 //  something more interesting!
@@ -193,7 +236,13 @@ int main(int argc, char *argv[])
     for(int j=0; j<3; j++)
       mean_filter[i][j] = 1/9.0;
 
-  SDoublePlane output_image = convolve_general(input_image, mean_filter);
+    SDoublePlane gFilter(5,5);
+    gFilter = createFilter(gFilter);
+
+  SDoublePlane output_image = convolve_general(input_image, gFilter);
+
+  SImageIO::write_png_file("Blurred.png", output_image, output_image, output_image);
+
   //SDoublePlane output_image = flipper(mean_filter); for testing the flipper function
   
   // randomly generate some detected symbols -- you'll want to replace this
