@@ -215,6 +215,30 @@ SDoublePlane createFilter(SDoublePlane gFilter)
     return gFilter;
     
 }
+
+SDoublePlane binaryImgGen(SDoublePlane input, int threshold)
+{
+    SDoublePlane output(input.rows(), input.cols());
+    
+    for (int i = 0; i < input.rows(); i++)
+    {
+        for (int j = 0; j < input.cols(); j++)
+        {
+            if(input[i][j]<threshold)
+            {
+                
+                output[i][j] = 0;
+            }
+            else
+            {
+                output[i][j] = 255;
+            }
+            
+        }
+    }
+    return output;
+}
+
 //
 // This main file just outputs a few test images. You'll want to change it to do 
 //  something more interesting!
@@ -242,6 +266,10 @@ int main(int argc, char *argv[])
   SDoublePlane output_image = convolve_general(input_image, gFilter);
 
   SImageIO::write_png_file("Blurred.png", output_image, output_image, output_image);
+
+  SDoublePlane output_image1 = binaryImgGen(output_image, 200);
+    
+  SImageIO::write_png_file("Threshold.png", output_image1, output_image1, output_image1);
 
   //SDoublePlane output_image = flipper(mean_filter); for testing the flipper function
   
