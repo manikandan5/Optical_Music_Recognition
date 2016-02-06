@@ -1,4 +1,4 @@
-//
+////
 //  DLib: A simple image processing library.
 //
 //  David Crandall, 2003-2005
