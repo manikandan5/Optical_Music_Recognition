@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
   string input_filename(argv[1]);
   SDoublePlane input_image= SImageIO::read_png_file(input_filename.c_str());
   
-  // test step 2 by applying mean filters to the input image
+  // test step 2 by applying gaussian filters to the input image
   SDoublePlane mean_filter(3,3);
   for(int i=0; i<3; i++)
     for(int j=0; j<3; j++)
@@ -244,7 +244,23 @@ int main(int argc, char *argv[])
   SImageIO::write_png_file("Blurred.png", output_image, output_image, output_image);
 
   //SDoublePlane output_image = flipper(mean_filter); for testing the flipper function
-  
+  //compute the distance function
+SDoublePlane binary_template_1=find_edges(template_1, double thresh=0);
+SDoublePlane binary_input_image=find_edges(input_image, double thresh=0);
+SDoublePlane inverse_template_1=inverse(binary_template_1);
+SDoublePlane flipped_inverse_template_1=flipper(inverse_template_1);
+SDoublePlane inverse_input_image=inverse(binary_input_image);
+SDoublePlane F = convolve_general(input_image,flipped_template_1)-convolve_general(inverse_input_image,flipped_inverse_template_1) ;
+for(int i, i<=input_image.rows(), i++) ; 
+{ for (int j, j<=input_image.cols(), j++)
+F[i][j]=F[i][j]-sum ; 
+}
+//find the maximum value in F
+int max ;
+max=maximum(F); 
+//find indexes of maxima in F 
+
+   
   // randomly generate some detected symbols -- you'll want to replace this
   //  with your symbol detection code obviously!
   vector<DetectedSymbol> symbols;
