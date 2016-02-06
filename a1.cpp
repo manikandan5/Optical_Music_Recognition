@@ -188,8 +188,9 @@ SDoublePlane flipper(const SDoublePlane &input )
   return output;
 }
 
-SDoublePlane createFilter(SDoublePlane gFilter)
+SDoublePlane createFilter()
 {
+    SDoublePlane gFilter(5,5);
     // initialization of standard deviation to 1.0
     double sigma = 1.0;
     double r, s = 2.0 * sigma * sigma;
@@ -261,7 +262,7 @@ int main(int argc, char *argv[])
       mean_filter[i][j] = 1/9.0;
 
     SDoublePlane gFilter(5,5);
-    gFilter = createFilter(gFilter);
+    gFilter = createFilter();
 
   SDoublePlane output_image = convolve_general(input_image, gFilter);
 
