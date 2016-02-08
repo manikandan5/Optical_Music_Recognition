@@ -174,6 +174,14 @@ SDoublePlane find_edges(const SDoublePlane &input, double thresh=0)
   return output;
 }
 
+
+SDoublePlane inverse(const SDoublePlane &input )
+{
+  SDoublePlane output(input.rows(),input.cols());
+  //Logic for inverse has to be filled
+  return output;
+}
+
 SDoublePlane flipper(const SDoublePlane &input )
 {
   SDoublePlane output(input.rows(),input.cols());
@@ -217,6 +225,21 @@ SDoublePlane createFilter()
     
 }
 
+double maximum(SDoublePlane &input)
+{
+ double max = 0;
+ for(int i=0;i<input.rows();i++)
+ {
+    for(int j=0;j<input.cols();j++)
+    {
+        if (max < input[i][j])
+        {
+            max = input[i][j];
+        }
+    }
+ }
+ return max;
+}
 SDoublePlane binaryImgGen(SDoublePlane input, int threshold)
 {
     SDoublePlane output(input.rows(), input.cols());
@@ -232,7 +255,7 @@ SDoublePlane binaryImgGen(SDoublePlane input, int threshold)
             }
             else
             {
-                output[i][j] = 255;
+                output[i][j] = 1;
             }
             
         }
@@ -240,6 +263,87 @@ SDoublePlane binaryImgGen(SDoublePlane input, int threshold)
     return output;
 }
 
+vector<DetectedSymbol> symDetectionByTemplate(SDoublePlane &input_image,SDoublePlane &template_1)
+{
+  vector<DetectedSymbol> symbols;
+  SDoublePlane gFilter(5,5);
+  gFilter = createFilter();
+  double thresh = 100;
+
+  SDoublePlane output_image = convolve_general(input_image, gFilter);
+
+  SImageIO::write_png_file("Blurred.png", output_image, output_image, output_image);
+
+  SDoublePlane output_image1 = binaryImgGen(output_image, 200);
+
+  SImageIO::write_png_file("Threshold.png", output_image1, output_image1, output_image1);
+
+
+  //SDoublePlane output_image = flipper(mean_filter); for testing the flipper function
+  //compute the distance function
+  SDoublePlane binary_template_1 = binaryImgGen(template_1, thresh);
+  SDoublePlane binary_input_image = binaryImgGen(input_image, thresh);
+  SDoublePlane inverse_template_1 = inverse(binary_template_1);
+  SDoublePlane flipped_inverse_template_1 = flipper(inverse_template_1);
+  SDoublePlane flipped_template_1 = flipper(binary_template_1);
+  SDoublePlane inverse_input_image = inverse(binary_input_image);
+  SDoublePlane F = convolve_general(input_image,flipped_template_1) + convolve_general(inverse_input_image,flipped_inverse_template_1) ;
+
+  //find the maximum value in F
+  int max ;
+  max=maximum(F);
+  //find indexes of maxima in F
+  return symbols;
+}
+
+class Dimensions
+{
+ public:
+  Dimensions()
+  {
+    row_coordinate = 0;
+    spacing = 0;
+  }
+  int getCoordinate()
+  {
+    return row_coordinate;
+  }
+
+  int getSpacing()
+  {
+    return spacing;
+  }
+ protected:
+  int row_coordinate;
+  int spacing;
+};
+
+Dimensions findStaff(SDoublePlane &input)
+{
+  int inp_row = input.rows();
+  int inp_col = input.cols();
+  SDoublePlane output(inp_row, inp_col);
+  int accum_r = inp_row;
+  int accum_d = inp_row/10;
+  _DTwoDimArray<double> accum(accum_r, accum_d);
+  for(int i=0;i<(inp_row-(4*accum_d));i++)
+  {
+    for(int j=0;j<inp_col;j++)
+    {
+      for(int h=1;h<=accum_d;h++)
+      {
+        if (input[i][j] == 1 && input[i+h][j] == 1 && input[i+(2*h)][j] == 1 && input[i+(3*h)][j] == 1 && input[i+(4*h)][j] == 1 )
+        {
+            accum[i][h]++;
+        }
+      }
+    }
+  }
+
+
+
+  return ;
+}
 //
 // This main file just outputs a few test images. You'll want to change it to do 
 //  something more interesting!
@@ -261,33 +365,9 @@ int main(int argc, char *argv[])
     for(int j=0; j<3; j++)
       mean_filter[i][j] = 1/9.0;
 
-    SDoublePlane gFilter(5,5);
-    gFilter = createFilter();
+  SDoublePlane gFilter(5,5);
+  gFilter = createFilter();
 
-  SDoublePlane output_image = convolve_general(input_image, gFilter);
-
-  SImageIO::write_png_file("Blurred.png", output_image, output_image, output_image);
-
-  SDoublePlane output_image1 = binaryImgGen(output_image, 200);
-    
-  SImageIO::write_png_file("Threshold.png", output_image1, output_image1, output_image1);
-
-  //SDoublePlane output_image = flipper(mean_filter); for testing the flipper function
-  //compute the distance function
-SDoublePlane binary_template_1=find_edges(template_1, double thresh=0);
-SDoublePlane binary_input_image=find_edges(input_image, double thresh=0);
-SDoublePlane inverse_template_1=inverse(binary_template_1);
-SDoublePlane flipped_inverse_template_1=flipper(inverse_template_1);
-SDoublePlane inverse_input_image=inverse(binary_input_image);
-SDoublePlane F = convolve_general(input_image,flipped_template_1)-convolve_general(inverse_input_image,flipped_inverse_template_1) ;
-for(int i, i<=input_image.rows(), i++) ; 
-{ for (int j, j<=input_image.cols(), j++)
-F[i][j]=F[i][j]-sum ; 
-}
-//find the maximum value in F
-int max ;
-max=maximum(F); 
-//find indexes of maxima in F 
 
    
   // randomly generate some detected symbols -- you'll want to replace this

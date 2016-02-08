@@ -65,9 +65,9 @@ class _DTwoDimArray
       deallocate_storage();
     }
 
-
   ///////////////////////////////////////////////////////
   // assignment operator
+
   _DTwoDimArray<T> &operator=(const _DTwoDimArray<T> &other)
     {
       if(this == &other)
