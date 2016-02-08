@@ -125,6 +125,26 @@ SDoublePlane convolve_separable(const SDoublePlane &input, const SDoublePlane &r
   return output;
 }
 
+SDoublePlane convolve_edge(const SDoublePlane &input, const SDoublePlane &filter)
+{
+    SDoublePlane output(input.rows(), input.cols());
+
+    for (int i = 1; i < input.rows()-1; i++)
+    {
+        for (int j = 1; j < input.cols()-1; j++)
+        {
+
+            for (int ki = -1; ki < 2; ki++ )
+            {
+                for (int kj = -1; kj<2; kj++)
+                {
+                    output[i][j] = output[i][j] + filter[ki+2][kj+2] * input[i - ki][j - kj];
+                }
+            }
+        }
+    }
+    return output;
+}
 // Convolve an image with a separable convolution kernel
 //
 SDoublePlane convolve_general(const SDoublePlane &input, const SDoublePlane &filter)
@@ -162,6 +182,20 @@ SDoublePlane sobel_gradient_filter(const SDoublePlane &input, bool _gx)
   return output;
 }
 
+SDoublePlane sobelSqRt(SDoublePlane inputX, SDoublePlane inputY)
+{
+    SDoublePlane output(inputX.rows(), inputX.cols());
+
+    for (int i = 0; i < inputX.rows(); i++)
+    {
+        for (int j = 0; j < inputX.cols(); j++)
+        {
+            output[i][j] = sqrt((pow(inputX[i][j],2)+pow(inputY[i][j], 2)));
+        }
+    }
+    return output;
+
+}
 // Apply an edge detector to an image, returns the binary edge map
 // 
 SDoublePlane find_edges(const SDoublePlane &input, double thresh=0)
@@ -325,6 +359,7 @@ Dimensions findStaff(SDoublePlane &input)
   SDoublePlane output(inp_row, inp_col);
   int accum_r = inp_row;
   int accum_d = inp_row/10;
+  Dimensions dim = Dimensions();
   _DTwoDimArray<double> accum(accum_r, accum_d);
   for(int i=0;i<(inp_row-(4*accum_d));i++)
   {
@@ -342,7 +377,7 @@ Dimensions findStaff(SDoublePlane &input)
 
 
 
-  return ;
+  return dim;
 }
 //
 // This main file just outputs a few test images. You'll want to change it to do 
@@ -367,8 +402,45 @@ int main(int argc, char *argv[])
 
   SDoublePlane gFilter(5,5);
   gFilter = createFilter();
+  // Temporary Edge Detedtion
+
+  SDoublePlane sobelFilterX(3,3);
+
+  sobelFilterX[0][0]=-1;
+  sobelFilterX[0][1]=0;
+  sobelFilterX[0][2]=1;
+  sobelFilterX[1][0]=-2;
+  sobelFilterX[1][1]=-0;
+  sobelFilterX[1][2]=-2;
+  sobelFilterX[2][0]=-1;
+  sobelFilterX[2][1]=0;
+  sobelFilterX[2][2]=1;
+
+  SDoublePlane sobelX = convolve_edge(input_image, sobelFilterX);
+
+  SDoublePlane sobelFilterY(3,3);
+
+  sobelFilterY[0][0]=-1;
+  sobelFilterY[0][1]=-2;
+  sobelFilterY[0][2]=1;
+  sobelFilterY[1][0]=-0;
+  sobelFilterY[1][1]=-0;
+  sobelFilterY[1][2]=-0;
+  sobelFilterY[2][0]=1;
+  sobelFilterY[2][1]=2;
+  sobelFilterY[2][2]=1;
+
+  SDoublePlane sobelY = convolve_edge(input_image, sobelFilterY);
+
+  SDoublePlane sobelOuput = sobelSqRt(sobelX,sobelY);
 
 
+
+  SDoublePlane output_image2 = binaryImgGen(sobelOuput, 90);
+
+  SImageIO::write_png_file("Edge.png", output_image2, output_image2, output_image2);
+
+  //- Temporary Edge Detedtion
    
   // randomly generate some detected symbols -- you'll want to replace this
   //  with your symbol detection code obviously!
