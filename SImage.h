@@ -17,6 +17,27 @@ class SDoublePlane : public _DTwoDimArray<double>
       memset(data_ptr(), 0, sizeof(double) * rows() * cols());
     }
 
+  ///////////////////////////////////////////////////////
+  // Addition operator
+
+  SDoublePlane &operator+(const SDoublePlane &a)
+    {
+      // profiler->begin(4);
+      if( _rows == a.rows() && _cols == a.cols())
+	{
+	  for(int i=0;i<_rows;i++)
+	  {
+	    for(int j=0;j<_cols;j++)
+	    {
+	        data[i][j] += a[i][j];
+	    }
+	  }
+	}
+
+      // profiler->end(4);
+      return *this;
+    }
+
 
 };
 
