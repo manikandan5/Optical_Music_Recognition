@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+for(int i, i=1)
+=======
 #include <SImage.h>
 #include <SImageIO.h>
 #include <cmath>
@@ -372,8 +375,43 @@ vector<DetectedSymbol> symDetectionByTemplate(SDoublePlane &input_image,SDoubleP
   //find the maximum value in F
   int max ;
   max=maximum(F);
+<<<<<<< HEAD
 
   //find indexes of maxima in F
+=======
+  //find indexes of maxima in F and affect them to symbols
+  int u,v,w;
+  for (int u ;u<=inp_row ; u++)
+  {for (int v; v<=inp_col ; v++)
+  if (F[u][v]=max )
+  {w=w+1;
+  symbols[w].row = v;
+  symbols[w].col = u ;
+  //this part of the code is to identify the pitch and type 
+  //if ((starting__trebble_staff=u || starting_trebble_staff+3*h<u<starting_trebble_staff+4*h) && (type condition))
+  //{symbols[w].pitch= "F";}
+  //symbols[w].type = NOTEHEAD; 
+  //if ((starting_trebble_staff<u<starting_trebble_staff+h || u=starting_trebble_staff+4*h) && (type condition))
+  //{symbols[w].pitch= "E" ; 
+  //symbols[w].type = NOTEHEAD ;}
+  //if ((u=starting_trebble_staff+h || starting_trebble_staff+4*h <u< starting_trebble_staff+5*h) && (type condition)) 
+  //{symbols[w].pitch="D";
+  //symbols[w].type=NOTEHEAD ;}
+  //if ((starting_trebble_staff+h<u<starting_trebble_staff+2*h || u=starting_trebble_staff+5*h) && (type condition))
+  //{symbols[w].pitch= "C" ; 
+  //symbols[w].type = NOTEHEAD ;}
+   //if ((u=starting_trebble_staff+2*h || starting_trebble_staff+5*h <u< starting_trebble_staff+6*h) && (type condition)) 
+  //{symbols[w].pitch="B";
+  //symbols[w].type=NOTEHEAD ;}
+    //if ((starting_trebble_staff+2*h<u<starting_trebble_staff+3*h || u=starting_trebble_staff+6*h) && (type condition))
+  //{symbols[w].pitch= "A" ; 
+  //symbols[w].type = NOTEHEAD ;}
+     //if ((u=starting_trebble_staff+3*h || starting_trebble_staff+6*h <u< starting_trebble_staff+7*h) && (type condition)) 
+  //{symbols[w].pitch="G";
+  //symbols[w].type=NOTEHEAD ;}
+  }
+}
+>>>>>>> b1b11b71dc2e2c787a5ae0055835b993bacc5919
   return symbols;
 }
 
@@ -526,3 +564,4 @@ int main(int argc, char *argv[])
   write_detection_txt("detected.txt", symbols);
   write_detection_image("detected.png", symbols, input_image);
 }
+>>>>>>> 68d29fd3ea03ed3910606b6df548ed29b9725792
