@@ -259,53 +259,60 @@ SDoublePlane sobel_gradient_filter(const SDoublePlane &input)
     
     SDoublePlane sobelFilterX(3,3);
     
-    sobelFilterX[0][0]=-1;
+    sobelFilterX[0][0]=-3;
     sobelFilterX[0][1]=0;
-    sobelFilterX[0][2]=1;
-    sobelFilterX[1][0]=-2;
+    sobelFilterX[0][2]=3;
+    sobelFilterX[1][0]=-10;
     sobelFilterX[1][1]=0;
-    sobelFilterX[1][2]=2;
-    sobelFilterX[2][0]=-1;
+    sobelFilterX[1][2]=10;
+    sobelFilterX[2][0]=-3;
     sobelFilterX[2][1]=0;
-    sobelFilterX[2][2]=1;
-    
-    SDoublePlane sobelX = convolve_general(input, sobelFilterX);
+    sobelFilterX[2][2]=3;
     
     SDoublePlane sobelFilterY(3,3);
     
-    sobelFilterY[0][0]=-1;
-    sobelFilterY[0][1]=-2;
-    sobelFilterY[0][2]=-1;
+    sobelFilterY[0][0]=-3;
+    sobelFilterY[0][1]=-10;
+    sobelFilterY[0][2]=-3;
     sobelFilterY[1][0]=0;
     sobelFilterY[1][1]=0;
     sobelFilterY[1][2]=0;
-    sobelFilterY[2][0]=1;
-    sobelFilterY[2][1]=2;
-    sobelFilterY[2][2]=1;
+    sobelFilterY[2][0]=3;
+    sobelFilterY[2][1]=10;
+    sobelFilterY[2][2]=3;
+    
+    for(int i=0; i<3; i++)
+    {
+        for(int j=0; j<3; j++)
+        {
+            sobelFilterX[i][j] = sobelFilterX[i][j] /32.0;
+            sobelFilterY[i][j] = sobelFilterY[i][j] /32.0;
+    
+        }
+    }
+    
+    SDoublePlane sobelX = convolve_general(input, sobelFilterX);
     
     SDoublePlane sobelY = convolve_general(input, sobelFilterY);
     
     SDoublePlane sobelOuput = sobelSqRt(sobelX,sobelY);
     
     
-    int threshold = 0;
+    int maxValue = 0;
     
     for(int i = 0 ; i < sobelOuput.rows(); i++)
     {
         for(int j = 0 ; j < sobelOuput.cols(); j++)
         {
-            if(sobelOuput[i][j]> threshold)
+            if(sobelOuput[i][j]> maxValue)
             {
-                threshold = sobelOuput[i][j];
+                maxValue = sobelOuput[i][j];
             }
             
         }
     }
     
-    output = binaryImgGen(sobelOuput, threshold/5);
-    
-    // Implement a sobel gradient estimation filter with 1-d filters
-    
+    output = binaryImgGen(sobelOuput, maxValue/5);
     
     return output;
 }
