@@ -162,6 +162,19 @@ SDoublePlane convolve_separable(const SDoublePlane &input, const SDoublePlane &r
   return output;
 }
 
+SDoublePlane flipper(const SDoublePlane &input )
+{
+  SDoublePlane output(input.rows(),input.cols());
+  for(int i=0;i<input.rows();i++)
+  {
+    for(int j=0;j<input.cols();j++)
+    {
+      output[i][j]= input[input.rows()-i-1][input.cols()-j-1];
+    }
+  }
+  return output;
+}
+
 SDoublePlane convolve_edge(const SDoublePlane &input, const SDoublePlane &filter)
 {
     SDoublePlane output(input.rows(), input.cols());
@@ -187,7 +200,7 @@ SDoublePlane convolve_edge(const SDoublePlane &input, const SDoublePlane &filter
 SDoublePlane convolve_general(const SDoublePlane &input, const SDoublePlane &filter)
 {
   SDoublePlane output(input.rows(), input.cols());
-    
+  SDoublePlane flipped_filter = flipper(filter);
     for (int i = 2; i < input.rows()-2; i++)
     {
         for (int j = 2; j < input.cols()-2; j++)
@@ -197,8 +210,7 @@ SDoublePlane convolve_general(const SDoublePlane &input, const SDoublePlane &fil
             {
                 for (int kj = -2; kj<3; kj++)
                 {
-                    output[i][j] = output[i][j] + filter[ki+2][kj+2] * input[i - ki][j - kj];
-                    
+                    output[i][j] = output[i][j] + flipped_filter[ki+2][kj+2] * input[i - ki][j - kj];
                 }
             }
         }
@@ -263,18 +275,6 @@ SDoublePlane inverse(const SDoublePlane &input )
   return output;
 }
 
-SDoublePlane flipper(const SDoublePlane &input )
-{
-  SDoublePlane output(input.rows(),input.cols());
-  for(int i=0;i<input.rows();i++)
-  {
-    for(int j=0;j<input.cols();j++)
-    {
-      output[i][j]= input[input.rows()-i-1][input.cols()-j-1];
-    }
-  }
-  return output;
-}
 
 SDoublePlane createFilter()
 {
