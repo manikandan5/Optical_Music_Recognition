@@ -509,7 +509,7 @@ int main(int argc, char *argv[])
   sobelFilterX[0][2]=1;
   sobelFilterX[1][0]=-2;
   sobelFilterX[1][1]=-0;
-  sobelFilterX[1][2]=-2;
+  sobelFilterX[1][2]=2;
   sobelFilterX[2][0]=-1;
   sobelFilterX[2][1]=0;
   sobelFilterX[2][2]=1;
@@ -520,10 +520,10 @@ int main(int argc, char *argv[])
 
   sobelFilterY[0][0]=-1;
   sobelFilterY[0][1]=-2;
-  sobelFilterY[0][2]=1;
-  sobelFilterY[1][0]=-0;
-  sobelFilterY[1][1]=-0;
-  sobelFilterY[1][2]=-0;
+  sobelFilterY[0][2]=-1;
+  sobelFilterY[1][0]=0;
+  sobelFilterY[1][1]=0;
+  sobelFilterY[1][2]=0;
   sobelFilterY[2][0]=1;
   sobelFilterY[2][1]=2;
   sobelFilterY[2][2]=1;
