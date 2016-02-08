@@ -43,10 +43,10 @@ void overlay_rectangle(SDoublePlane &input, int _top, int _left, int _bottom, in
       
     // draw top and bottom lines
     for(int j=left; j<=right; j++)
-	  input[top][j] = input[bottom][j] = graylevel;
+    input[top][j] = input[bottom][j] = graylevel;
     // draw left and right lines
     for(int i=top; i<=bottom; i++)
-	  input[i][left] = input[i][right] = graylevel;
+    input[i][left] = input[i][right] = graylevel;
   }
 }
 
@@ -72,11 +72,11 @@ void  write_detection_txt(const string &filename, const vector<struct DetectedSy
       const DetectedSymbol &s = symbols[i];
       ofs << s.row << " " << s.col << " " << s.width << " " << s.height << " ";
       if(s.type == NOTEHEAD)
-	ofs << "filled_note " << s.pitch;
+  ofs << "filled_note " << s.pitch;
       else if(s.type == EIGHTHREST)
-	ofs << "eighth_rest _";
+  ofs << "eighth_rest _";
       else 
-	ofs << "quarter_rest _";
+  ofs << "quarter_rest _";
       ofs << " " << s.confidence << endl;
     }
 }
@@ -97,12 +97,12 @@ void  write_detection_image(const string &filename, const vector<DetectedSymbol>
       overlay_rectangle(output_planes[(s.type+2) % 3], s.row, s.col, s.row+s.height-1, s.col+s.width-1, 0, 2);
 
       if(s.type == NOTEHEAD)
-	{
-	  char str[] = {s.pitch, 0};
-	  draw_text(output_planes[0], str, s.row, s.col+s.width+1, 0, 2);
-	  draw_text(output_planes[1], str, s.row, s.col+s.width+1, 0, 2);
-	  draw_text(output_planes[2], str, s.row, s.col+s.width+1, 0, 2);
-	}
+  {
+    char str[] = {s.pitch, 0};
+    draw_text(output_planes[0], str, s.row, s.col+s.width+1, 0, 2);
+    draw_text(output_planes[1], str, s.row, s.col+s.width+1, 0, 2);
+    draw_text(output_planes[2], str, s.row, s.col+s.width+1, 0, 2);
+  }
     }
 
   SImageIO::write_png_file(filename.c_str(), output_planes[0], output_planes[1], output_planes[2]);
@@ -124,6 +124,30 @@ SDoublePlane convolve_separable(const SDoublePlane &input, const SDoublePlane &r
   
   return output;
 }
+
+//+Temporary Code
+SDoublePlane convolve_edge(const SDoublePlane &input, const SDoublePlane &filter)
+{
+    SDoublePlane output(input.rows(), input.cols());
+    
+    for (int i = 1; i < input.rows()-1; i++)
+    {
+        for (int j = 1; j < input.cols()-1; j++)
+        {
+            
+            for (int ki = -1; ki < 2; ki++ )
+            {
+                for (int kj = -1; kj<2; kj++)
+                {
+                    output[i][j] = output[i][j] + filter[ki+2][kj+2] * input[i - ki][j - kj];
+                    
+                }
+            }
+        }
+    }
+    return output;
+}
+//-Temporary Code
 
 // Convolve an image with a separable convolution kernel
 //
@@ -240,6 +264,21 @@ SDoublePlane binaryImgGen(SDoublePlane input, int threshold)
     return output;
 }
 
+SDoublePlane sobelSqRt(SDoublePlane inputX, SDoublePlane inputY)
+{
+    SDoublePlane output(inputX.rows(), inputX.cols());
+    
+    for (int i = 0; i < inputX.rows(); i++)
+    {
+        for (int j = 0; j < inputX.cols(); j++)
+        {
+            output[i][j] = sqrt((pow(inputX[i][j],2)+pow(inputY[i][j], 2)));
+        }
+    }
+    return output;
+
+}
+
 //
 // This main file just outputs a few test images. You'll want to change it to do 
 //  something more interesting!
@@ -274,20 +313,61 @@ int main(int argc, char *argv[])
 
   //SDoublePlane output_image = flipper(mean_filter); for testing the flipper function
   //compute the distance function
-SDoublePlane binary_template_1=find_edges(template_1, double thresh=0);
-SDoublePlane binary_input_image=find_edges(input_image, double thresh=0);
-SDoublePlane inverse_template_1=inverse(binary_template_1);
-SDoublePlane flipped_inverse_template_1=flipper(inverse_template_1);
-SDoublePlane inverse_input_image=inverse(binary_input_image);
-SDoublePlane F = convolve_general(input_image,flipped_template_1)-convolve_general(inverse_input_image,flipped_inverse_template_1) ;
-for(int i, i<=input_image.rows(), i++) ; 
-{ for (int j, j<=input_image.cols(), j++)
-F[i][j]=F[i][j]-sum ; 
-}
-//find the maximum value in F
-int max ;
-max=maximum(F); 
-//find indexes of maxima in F 
+  SDoublePlane binary_template_1=find_edges(template_1, double thresh=0);
+  SDoublePlane binary_input_image=find_edges(input_image, double thresh=0);
+  SDoublePlane inverse_template_1=inverse(binary_template_1);
+  SDoublePlane flipped_inverse_template_1=flipper(inverse_template_1);
+  SDoublePlane inverse_input_image=inverse(binary_input_image);
+  SDoublePlane F = convolve_general(input_image,flipped_template_1)-convolve_general(inverse_input_image,flipped_inverse_template_1) ;
+  for(int i; i<=input_image.rows(); i++)  
+  { 
+    for (int j; j<=input_image.cols(); j++)
+      F[i][j]=F[i][j]-sum ; 
+  }
+  //find the maximum value in F
+  int max ;
+  max=maximum(F); 
+  //find indexes of maxima in F 
+  
+  //+ Temporary Edge Detedtion
+
+  SDoublePlane sobelFilterX(3,3);
+  
+  sobelFilterX[0][0]=-1;
+  sobelFilterX[0][1]=0;
+  sobelFilterX[0][2]=1;
+  sobelFilterX[1][0]=-2;
+  sobelFilterX[1][1]=-0;
+  sobelFilterX[1][2]=-2;
+  sobelFilterX[2][0]=-1;
+  sobelFilterX[2][1]=0;
+  sobelFilterX[2][2]=1;
+  
+  SDoublePlane sobelX = convolve_edge(input_image, sobelFilterX);
+  
+  SDoublePlane sobelFilterY(3,3);
+  
+  sobelFilterY[0][0]=-1;
+  sobelFilterY[0][1]=-2;
+  sobelFilterY[0][2]=1;
+  sobelFilterY[1][0]=-0;
+  sobelFilterY[1][1]=-0;
+  sobelFilterY[1][2]=-0;
+  sobelFilterY[2][0]=1;
+  sobelFilterY[2][1]=2;
+  sobelFilterY[2][2]=1;
+  
+  SDoublePlane sobelY = convolve_edge(input_image, sobelFilterY);
+  
+  SDoublePlane sobelOuput = sobelSqRt(sobelX,sobelY);
+  
+  
+  
+  SDoublePlane output_image2 = binaryImgGen(sobelOuput, 90);
+  
+  SImageIO::write_png_file("Edge.png", output_image2, output_image2, output_image2);
+  
+  //- Temporary Edge Detedtion
 
    
   // randomly generate some detected symbols -- you'll want to replace this
