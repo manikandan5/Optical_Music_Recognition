@@ -138,9 +138,9 @@ void  write_staff_detection_image(const string &filename, const vector<Dimension
     {
       const Dimensions &s = symbols[i];
 
-      overlay_line(output_planes[0], s.row_coordinate, s.spacing ,255, 2);
-      overlay_line(output_planes[1], s.row_coordinate, s.spacing ,0, 2);
-      overlay_line(output_planes[2], s.row_coordinate, s.spacing ,0, 2);
+      overlay_line(output_planes[0], s.row_coordinate, s.spacing ,0, 1);
+      overlay_line(output_planes[1], s.row_coordinate, s.spacing ,0, 1);
+      overlay_line(output_planes[2], s.row_coordinate, s.spacing ,255, 1);
     }
 
   SImageIO::write_png_file(filename.c_str(), output_planes[0], output_planes[1], output_planes[2]);
@@ -250,16 +250,25 @@ SDoublePlane inverse(const SDoublePlane &input )
 {
   SDoublePlane output(input.rows(),input.cols());
   //Logic for inverse has to be filled
+  for(int i=0;i<input.rows();i++)
+  {
+    for(int j=0;j<input.cols();j++)
+    {
+      if (input[i][j] == 255)
+        output[i][j] = 0;
+      else
+        output[i][j] = 255;
+    }
+  }
   return output;
 }
 
 SDoublePlane flipper(const SDoublePlane &input )
 {
   SDoublePlane output(input.rows(),input.cols());
-  int i,j;
-  for(i=0;i<input.rows();i++)
+  for(int i=0;i<input.rows();i++)
   {
-    for(j=0;j<input.cols();j++)
+    for(int j=0;j<input.cols();j++)
     {
       output[i][j]= input[input.rows()-i-1][input.cols()-j-1];
     }
@@ -322,11 +331,11 @@ SDoublePlane binaryImgGen(SDoublePlane input, int threshold)
             if(input[i][j]<threshold)
             {
                 
-                output[i][j] = 255;
+                output[i][j] = 0;
             }
             else
             {
-                output[i][j] = 0;
+                output[i][j] = 255;
             }
             
         }
@@ -363,6 +372,7 @@ vector<DetectedSymbol> symDetectionByTemplate(SDoublePlane &input_image,SDoubleP
   //find the maximum value in F
   int max ;
   max=maximum(F);
+
   //find indexes of maxima in F
   return symbols;
 }
@@ -375,41 +385,60 @@ vector<Dimensions> findStaff(SDoublePlane &input)
   int inp_col = input.cols();
   SDoublePlane output(inp_row, inp_col);
   int accum_d = inp_row/10;
-  int accum_r = (inp_row-(4*accum_d));
+  int accum_r = inp_row-10;
   vector<Dimensions> staves;
-  _DTwoDimArray<double> accum(accum_r, accum_d);
-
-  for(int i=0;i<accum_r;i++)
-  {
-    for(int j=0;j<inp_col;j++)
-    {
-      for(int h=1;h<=accum_d;h++)
-      {
-        if (input[i][j] == 1 && input[i+h][j] == 1 && input[i+(2*h)][j] == 1 && input[i+(3*h)][j] == 1 && input[i+(4*h)][j] == 1 )
-        {
-            accum[i][h]++;
-        }
-      }
-    }
-  }
+  _DTwoDimArray<int> accum(accum_r, accum_d);
 
   for(int i=0;i<accum_r;i++)
   {
     for(int j=0;j<accum_d;j++)
     {
-        if (accum[i][j] >= (0.9*inp_col))
+        accum[i][j] = 0;
+    }
+  }
+  //Voting the Accumulator Space based on the pixel values.
+  for(int i=1;i<accum_r;i++)
+  {
+    for(int j=0;j<inp_col;j++)
+    {
+      for(int h=1;h<=accum_d;h++)
+      {
+        if ((i +(4*h)+1) < inp_row-1)
         {
-            Dimensions dim;
+            if ((input[i][j] == 0 || input[i+1][j] ==0 || input[i-1][j] ==0) && \
+            (input[i+h][j] == 0 || input[i+h+1][j] == 0 || input[i+h-1][j] == 0) && \
+            (input[i+(2*h)][j] == 0 || input[i+(2*h)+1][j] == 0 || input[i+(2*h)-1][j] == 0) && \
+            (input[i+(3*h)][j] == 0 || input[i+(3*h)+1][j] == 0 || input[i+(3*h)-1][j] == 0) && \
+            (input[i+(4*h)][j] == 0 || input[i+(4*h)+1][j] == 0 || input[i+(4*h)-1][j] == 0))
+            {
+                accum[i][h]++;
+            }
+        }
+      }
+    }
+  }
+  //Finding the Parameters surpassing a threshold
+  Dimensions dim,prev_dim;
+  for(int i=0;i<accum_r;i++)
+  {
+    for(int j=0;j<accum_d;j++)
+    {
+        if (accum[i][j] >= 0.9*inp_col)
+        {
+
             dim.row_coordinate =i;
             dim.spacing = j;
-            staves.push_back(dim);
+            if (abs(prev_dim.row_coordinate - dim.row_coordinate) > 5)
+            {
+                staves.push_back(dim);
+            }
+            #cout << dim.row_coordinate << " " << dim.spacing << " " << abs(prev_dim.row_coordinate - dim.row_coordinate) << endl;
+            prev_dim.row_coordinate = dim.row_coordinate;
+            prev_dim.spacing = dim.spacing;
             break;
         }
     }
   }
-
-
-
   return staves;
 }
 //
@@ -472,6 +501,9 @@ int main(int argc, char *argv[])
   SDoublePlane output_image2 = binaryImgGen(sobelOuput, 90);
 
   SImageIO::write_png_file("Edge.png", output_image2, output_image2, output_image2);
+  SDoublePlane output_image1 = binaryImgGen(input_image, 150);
+  vector<Dimensions> staff_lines = findStaff(output_image1);
+  write_staff_detection_image("staves.png", staff_lines, input_image);
 
   //- Temporary Edge Detedtion
    
