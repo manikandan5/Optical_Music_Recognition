@@ -50,6 +50,20 @@ void overlay_rectangle(SDoublePlane &input, int _top, int _left, int _bottom, in
   }
 }
 
+void overlay_line(SDoublePlane &input, int _top, int _space, double graylevel, int width)
+{
+  for(int w=-width/2; w<=width/2; w++) {
+    int top = _top+w, space=_space+w;
+
+    // if any of the coordinates are out-of-bounds, truncate them
+    top = min( max( top, 0 ), input.rows()-1);
+    space = min( max( space, 0 ), input.rows()-1);
+
+    // draw all the Staff lines
+    for(int j=0; j<=input.cols(); j++)
+	  input[top][j] = input[top+space][j] = input[top+(2*space)][j] = input[top+(3*space)][j] = input[top+(4*space)][j] = graylevel;
+  }
+}
 // DetectedSymbol class may be helpful!
 //  Feel free to modify.
 //
@@ -62,6 +76,12 @@ public:
   double confidence;
 };
 
+class Dimensions
+{
+ public:
+  int row_coordinate;
+  int spacing;
+};
 // Function that outputs the ascii detection output file
 void  write_detection_txt(const string &filename, const vector<struct DetectedSymbol> &symbols)
 {
@@ -108,6 +128,23 @@ void  write_detection_image(const string &filename, const vector<DetectedSymbol>
   SImageIO::write_png_file(filename.c_str(), output_planes[0], output_planes[1], output_planes[2]);
 }
 
+void  write_staff_detection_image(const string &filename, const vector<Dimensions> &symbols, const SDoublePlane &input)
+{
+  SDoublePlane output_planes[3];
+  for(int i=0; i<3; i++)
+    output_planes[i] = input;
+
+  for(int i=0; i<symbols.size(); i++)
+    {
+      const Dimensions &s = symbols[i];
+
+      overlay_line(output_planes[0], s.row_coordinate, s.spacing ,255, 2);
+      overlay_line(output_planes[1], s.row_coordinate, s.spacing ,0, 2);
+      overlay_line(output_planes[2], s.row_coordinate, s.spacing ,0, 2);
+    }
+
+  SImageIO::write_png_file(filename.c_str(), output_planes[0], output_planes[1], output_planes[2]);
+}
 
 
 // The rest of these functions are incomplete. These are just suggestions to 
@@ -138,7 +175,7 @@ SDoublePlane convolve_edge(const SDoublePlane &input, const SDoublePlane &filter
             {
                 for (int kj = -1; kj<2; kj++)
                 {
-                    output[i][j] = output[i][j] + filter[ki+2][kj+2] * input[i - ki][j - kj];
+                    output[i][j] = output[i][j] + filter[ki+1][kj+1] * input[i - ki][j - kj];
                 }
             }
         }
@@ -285,11 +322,11 @@ SDoublePlane binaryImgGen(SDoublePlane input, int threshold)
             if(input[i][j]<threshold)
             {
                 
-                output[i][j] = 0;
+                output[i][j] = 255;
             }
             else
             {
-                output[i][j] = 1;
+                output[i][j] = 0;
             }
             
         }
@@ -330,38 +367,19 @@ vector<DetectedSymbol> symDetectionByTemplate(SDoublePlane &input_image,SDoubleP
   return symbols;
 }
 
-class Dimensions
-{
- public:
-  Dimensions()
-  {
-    row_coordinate = 0;
-    spacing = 0;
-  }
-  int getCoordinate()
-  {
-    return row_coordinate;
-  }
 
-  int getSpacing()
-  {
-    return spacing;
-  }
- protected:
-  int row_coordinate;
-  int spacing;
-};
 
-Dimensions findStaff(SDoublePlane &input)
+vector<Dimensions> findStaff(SDoublePlane &input)
 {
   int inp_row = input.rows();
   int inp_col = input.cols();
   SDoublePlane output(inp_row, inp_col);
-  int accum_r = inp_row;
   int accum_d = inp_row/10;
-  Dimensions dim = Dimensions();
+  int accum_r = (inp_row-(4*accum_d));
+  vector<Dimensions> staves;
   _DTwoDimArray<double> accum(accum_r, accum_d);
-  for(int i=0;i<(inp_row-(4*accum_d));i++)
+
+  for(int i=0;i<accum_r;i++)
   {
     for(int j=0;j<inp_col;j++)
     {
@@ -375,9 +393,24 @@ Dimensions findStaff(SDoublePlane &input)
     }
   }
 
+  for(int i=0;i<accum_r;i++)
+  {
+    for(int j=0;j<accum_d;j++)
+    {
+        if (accum[i][j] >= (0.9*inp_col))
+        {
+            Dimensions dim;
+            dim.row_coordinate =i;
+            dim.spacing = j;
+            staves.push_back(dim);
+            break;
+        }
+    }
+  }
 
 
-  return dim;
+
+  return staves;
 }
 //
 // This main file just outputs a few test images. You'll want to change it to do 
@@ -402,7 +435,7 @@ int main(int argc, char *argv[])
 
   SDoublePlane gFilter(5,5);
   gFilter = createFilter();
-  // Temporary Edge Detedtion
+  // Temporary Edge Detection
 
   SDoublePlane sobelFilterX(3,3);
 
