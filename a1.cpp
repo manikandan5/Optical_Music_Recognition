@@ -466,7 +466,38 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
               }
 
               s.confidence = 1 - ((max - F[i][j])/(0.1*max)) ;
-              s.pitch = (rand() % 7) + 'A';
+                          
+            
+        
+              if ((starting_trebble_staff-4*h<u<starting_trebble_staff-3*h ||starting__trebble_staff=u || starting_trebble_staff+3*h<u<starting_trebble_staff+4*h)
+                || ((starting_bass_staff+4*h<u<starting_bass_staff+5*h || u=starting_bass_staff+ h || starting_bass_staff-2*h<u<starting_bass_staff-3*h     )
+                {s.pitch= "F";}
+                
+                if ((u=starting_trebble_staff-3*h ||starting_trebble_staff<u<starting_trebble_staff+h || u=starting_trebble_staff+4*h) ||
+                 ((starting_bass_staff+h<u<starting_bass_staff+2*h || u=starting_bass_staff+6*h || u=starting_bass_staff-2*h      )
+                {s.pitch= "E" ;
+                 }
+                if ((starting_trebble_staff-5*h<u<starting_trebble_staff-4*h|| u=starting_trebble_staff+h || starting_trebble_staff+4*h <u< starting_trebble_staff+5*h) ||
+				 ((starting_bass_staff+5*h<u<starting_bass_staff+6*h || u=starting_bass_staff+2*h || starting_bass_staff-h <u<starting_bass_staff - 2*h    )))
+                {s.pitch="D";
+                }
+                if ((u=starting_trebble_staff-2*h || starting_trebble_staff+h<u<starting_trebble_staff+2*h || u=starting_trebble_staff+5*h) ||
+				       (u=starting_bass_staff+h || starting_bass_staff-2*h<u<starting_bass_staff-3*h ||  u=starting_bass_staff-6*h))
+                {s.pitch= "C" ;
+                }
+                if ((starting_trebble_staff-6*h<u<starting_trebble_staff-5*h||u=starting_trebble_staff+2*h || starting_trebble_staff+5*h <u< starting_trebble_staff+6*h) || 
+				      (starting_bass_staff<u<starting_bass_staff-h || u=starting_bass_staff+4*h || starting_bass_staff+7*h<u<starting_bass_staff+8*h      ))
+                {s.pitch="B";
+                }
+                if ((u=starting_trebble_staff-h ||starting_trebble_staff+2*h<u<starting_trebble_staff+3*h || u=starting_trebble_staff+6*h) || 
+				       (u=starting_bass_staff || starting_bass_staff-3*h<u<starting_bass_staff-4*h ||  starting_bass_staff+3*h<u<starting_bass_staff+4*h))
+                {s.pitch= "A" ;
+                }
+                if ((starting_trebble_staff-7*h<u<starting_trebble_staff-6*h||u=starting_trebble_staff+3*h || starting_trebble_staff+6*h <u< starting_trebble_staff+7*h) || 
+				       (starting_bass_staff<u<starting_bass_staff+h || u=starting_bass_staff+5*h || u=starting_bass_staff-3*h      )
+                {s.pitch="G";
+                }
+            }
               if ((abs(prev_row-s.row) + abs(prev_col - s.col))> 2)
               {
                 symbols.push_back(s);
@@ -476,45 +507,7 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
             }
         }
     }
-    //find indexes of maxima in F and affect them to symbols
-    /*int u,v,w;
-    for (int u=0; u<input_image.rows(); u++)
-    {
-        for (int v=0; v < input_image.cols(); v++)
-            if (F[u][v]=max )
-            {
-            
-        
-                //if ((starting_trebble_staff-4*h<u<starting_trebble_staff-3*h ||starting__trebble_staff=u || starting_trebble_staff+3*h<u<starting_trebble_staff+4*h)
-                || ((starting_bass_staff+4*h<u<starting_bass_staff+5*h || u=starting_bass_staff+ h || starting_bass_staff-2*h<u<starting_bass_staff-3*h     )
-                //{symbols[w].pitch= "F";}
-                //
-                //if ((u=starting_trebble_staff-3*h ||starting_trebble_staff<u<starting_trebble_staff+h || u=starting_trebble_staff+4*h) ||
-                 ((starting_bass_staff+h<u<starting_bass_staff+2*h || u=starting_bass_staff+6*h || u=starting_bass_staff-2*h      )
-                //{symbols[w].pitch= "E" ;
-                // }
-                //if ((starting_trebble_staff-5*h<u<starting_trebble_staff-4*h|| u=starting_trebble_staff+h || starting_trebble_staff+4*h <u< starting_trebble_staff+5*h) ||
-				 ((starting_bass_staff+5*h<u<starting_bass_staff+6*h || u=starting_bass_staff+2*h || starting_bass_staff-h <u<starting_bass_staff - 2*h    )))
-                //{symbols[w].pitch="D";
-                //}
-                //if ((u=starting_trebble_staff-2*h || starting_trebble_staff+h<u<starting_trebble_staff+2*h || u=starting_trebble_staff+5*h) ||
-				       (u=starting_bass_staff+h || starting_bass_staff-2*h<u<starting_bass_staff-3*h ||  u=starting_bass_staff-6*h))
-                //{symbols[w].pitch= "C" ;
-                //}
-                //if ((starting_trebble_staff-6*h<u<starting_trebble_staff-5*h||u=starting_trebble_staff+2*h || starting_trebble_staff+5*h <u< starting_trebble_staff+6*h) || 
-				      (starting_bass_staff<u<starting_bass_staff-h || u=starting_bass_staff+4*h || starting_bass_staff+7*h<u<starting_bass_staff+8*h      ))
-                //{symbols[w].pitch="B";
-                //}
-                //if ((u=starting_trebble_staff-h ||starting_trebble_staff+2*h<u<starting_trebble_staff+3*h || u=starting_trebble_staff+6*h) || 
-				       (u=starting_bass_staff || starting_bass_staff-3*h<u<starting_bass_staff-4*h ||  starting_bass_staff+3*h<u<starting_bass_staff+4*h))
-                //{symbols[w].pitch= "A" ;
-                //}
-                //if ((starting_trebble_staff-7*h<u<starting_trebble_staff-6*h||u=starting_trebble_staff+3*h || starting_trebble_staff+6*h <u< starting_trebble_staff+7*h) || 
-				       (starting_bass_staff<u<starting_bass_staff+h || u=starting_bass_staff+5*h || u=starting_bass_staff-3*h      )
-                //{symbols[w].pitch="G";
-                //}
-            }
-    }*/
+
     return symbols;
 }
 
