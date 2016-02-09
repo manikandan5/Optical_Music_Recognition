@@ -394,7 +394,25 @@ int maximum(SDoublePlane &input)
     return max;
 }
 
-vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, const SDoublePlane &template_gen, const vector<Dimensions> &dim)
+/*vector<DetectedSymbol> refineDetectedSym(const vector<DetectedSymbol> &symbols)
+{
+    for(int i=0; i<symbols.size()-2; i++)
+    {
+        const DetectedSymbol &s = symbols[i];
+        if ((abs(s.row-symbols[i+1].row) + abs(s.col-symbols[i+1].col)) < 3)
+        {
+            symbols.erase(symbols.begin()+ i);
+        }
+        else if ((abs(s.row-symbols[i+2].row) + abs(s.col-symbols[i+2].col)) < 3)
+        {
+            symbols.erase(symbols.begin()+ i);
+        }
+    }
+    return symbols;
+} */
+
+
+vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, const SDoublePlane &template_gen, const string &str, const vector<Dimensions> &dim)
 {
     vector<DetectedSymbol> symbols;
     SDoublePlane gFilter(5,5);
@@ -418,7 +436,8 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
     //find the maximum value in F
     int max;
     max = maximum(F);
-    
+    int prev_row = 0;
+    int prev_col = 0;
     //find indexes of maxima in F
     // These indexes will be the location where the template is most likely to be present.
 
@@ -433,11 +452,11 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
               s.col = j - int(ceil(templ_col/2)) - 4;
               s.width = templ_col + 3;
               s.height = templ_row + 3;
-              if ((templ_row == 17) && (templ_col == 11))   //There should be a factor added to this when we scale up or scale down the template images
+              if (str == "NOTEHEAD")   //There should be a factor added to this when we scale up or scale down the template images
               {
                 s.type = (Type) 0;
               }
-              else if ((templ_row == 16) && (templ_col == 35))  //There should be a factor added to this when we scale up or scale down the template images
+              else if (str == "QUARTERREST")  //There should be a factor added to this when we scale up or scale down the template images
               {
                 s.type = (Type) 1;
               }
@@ -448,7 +467,12 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
 
               s.confidence = 1 - ((max - F[i][j])/(0.1*max)) ;
               s.pitch = (rand() % 7) + 'A';
-              symbols.push_back(s);
+              if ((abs(prev_row-s.row) + abs(prev_col - s.col))> 2)
+              {
+                symbols.push_back(s);
+              }
+              prev_row = s.row;
+              prev_col = s.col;
             }
         }
     }
@@ -569,8 +593,12 @@ int main(int argc, char *argv[])
     
     string input_filename(argv[1]);
     string template_1_str = "template1.png";
+    string template_2_str = "template2.png";
+    string template_3_str = "template3.png";
     SDoublePlane input_image = SImageIO::read_png_file(input_filename.c_str());
     SDoublePlane template_1 = SImageIO::read_png_file(template_1_str.c_str());
+    SDoublePlane template_2 = SImageIO::read_png_file(template_2_str.c_str());
+    SDoublePlane template_3 = SImageIO::read_png_file(template_3_str.c_str());
     // test step 2 by applying gaussian filters to the input image
     SDoublePlane mean_filter(3,3);
     for(int i=0; i<3; i++)
@@ -604,7 +632,9 @@ int main(int argc, char *argv[])
     
     // randomly generate some detected symbols -- you'll want to replace this
     //  with your symbol detection code obviously!
-    vector<DetectedSymbol> symbols = symDetectionByTemplate(input_image,template_1,staff_lines);
+    vector<DetectedSymbol> symbols = symDetectionByTemplate(input_image,template_1,"NOTEHEAD",staff_lines);
+    //vector<DetectedSymbol> quarterRest = symDetectionByTemplate(input_image,template_2,staff_lines);
+    //vector<DetectedSymbol> eigthRest = symDetectionByTemplate(input_image,template_3,staff_lines);
     /*for(int i=0; i<10; i++)
     {
         DetectedSymbol s;
@@ -618,6 +648,9 @@ int main(int argc, char *argv[])
         symbols.push_back(s);
     }
     */
+    //symbols = refineDetectedSym(symbols);
+    //symbols.insert(symbols.end(),quarterRest.begin(),quarterRest.end());
+    //symbols.insert(symbols.end(),eigthRest.begin(),eigthRest.end());
     write_detection_txt("detected.txt", symbols);
     write_detection_image("detected.png", symbols, input_image);
 }
