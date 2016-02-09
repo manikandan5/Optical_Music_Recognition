@@ -81,6 +81,7 @@ class Dimensions
 public:
     int row_coordinate;
     int spacing;
+    bool trebble;
 };
 // Function that outputs the ascii detection output file
 void  write_detection_txt(const string &filename, const vector<struct DetectedSymbol> &symbols)
@@ -204,7 +205,6 @@ SDoublePlane convolve_general(const SDoublePlane &input, const SDoublePlane &fil
                 for (int kj = -k; kj<= k; kj++)
                 {
                     output[i][j] = output[i][j] + flipped_filter[ki+k][kj+k] * input[i - ki][j - kj];
-                    
                 }
             }
         }
@@ -378,9 +378,9 @@ SDoublePlane createFilter()
     
 }
 
-double maximum(SDoublePlane &input)
+int maximum(SDoublePlane &input)
 {
-    double max = 0;
+    int max = 0;
     for(int i=0;i<input.rows();i++)
     {
         for(int j=0;j<input.cols();j++)
@@ -394,39 +394,43 @@ double maximum(SDoublePlane &input)
     return max;
 }
 
-vector<DetectedSymbol> symDetectionByTemplate(SDoublePlane &input_image,SDoublePlane &template_1)
+vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image,const SDoublePlane &template_1,const vector<Dimensions> &dim)
 {
     vector<DetectedSymbol> symbols;
     SDoublePlane gFilter(5,5);
     gFilter = createFilter();
     double thresh = 100;
-    
-    SDoublePlane output_image = convolve_general(input_image, gFilter);
-    
-    SImageIO::write_png_file("Blurred.png", output_image, output_image, output_image);
-    
-    SDoublePlane output_image1 = binaryImgGen(output_image, 200);
-    
-    SImageIO::write_png_file("Threshold.png", output_image1, output_image1, output_image1);
-    
-    
-    //SDoublePlane output_image = flipper(mean_filter); for testing the flipper function
-    //compute the distance function
+    int inp_row = input_image.rows();
+    int inp_col = input_image.cols();
+
+    //compute the Hamming distance function
     SDoublePlane binary_template_1 = binaryImgGen(template_1, thresh);
     SDoublePlane binary_input_image = binaryImgGen(input_image, thresh);
     SDoublePlane inverse_template_1 = inverse(binary_template_1);
     SDoublePlane flipped_inverse_template_1 = flipper(inverse_template_1);
     SDoublePlane flipped_template_1 = flipper(binary_template_1);
     SDoublePlane inverse_input_image = inverse(binary_input_image);
-    /*SDoublePlane F = convolve_general(input_image,flipped_template_1) + convolve_general(inverse_input_image,flipped_inverse_template_1) ;
+    SDoublePlane F = convolve_general(input_image,flipped_template_1) + convolve_general(inverse_input_image,flipped_inverse_template_1);
     
     //find the maximum value in F
-    int max ;
-    max=maximum(F);
+    int max;
+    max = maximum(F);
     
     //find indexes of maxima in F
+    // These indexes will be the location where the template is most likely to be present.
+
+    for(int i= 0; i< inp_row; i++)
+    {
+        for(int j=0; j< inp_col; j++)
+        {
+            if (F[i][j] >= (0.95*max))
+            {
+              cout << " Row: " << i << " Col: " << j << " " << F[i][j] << endl;
+            }
+        }
+    }
     //find indexes of maxima in F and affect them to symbols
-    int u,v,w;
+    /*int u,v,w;
     for (int u=0; u<input_image.rows(); u++)
     {
         for (int v=0; v < input_image.cols(); v++)
@@ -464,11 +468,10 @@ vector<DetectedSymbol> symDetectionByTemplate(SDoublePlane &input_image,SDoubleP
 
 
 
-vector<Dimensions> findStaff(SDoublePlane &input)
+vector<Dimensions> findStaff(const SDoublePlane &input)
 {
     int inp_row = input.rows();
     int inp_col = input.cols();
-    SDoublePlane output(inp_row, inp_col);
     int accum_d = inp_row/10;
     int accum_r = inp_row-10;
     vector<Dimensions> staves;
@@ -504,18 +507,21 @@ vector<Dimensions> findStaff(SDoublePlane &input)
     }
     //Finding the Parameters surpassing a threshold
     Dimensions dim,prev_dim;
+    bool trebble = 1;
     for(int i=0;i<accum_r;i++)
     {
         for(int j=0;j<accum_d;j++)
         {
             if (accum[i][j] >= 0.9*inp_col)
             {
-                
                 dim.row_coordinate =i;
                 dim.spacing = j;
-                if (abs(prev_dim.row_coordinate - dim.row_coordinate) > 5)
+                dim.trebble = trebble;
+
+                if ((abs(prev_dim.row_coordinate - dim.row_coordinate) > 5) && (dim.spacing > 3))
                 {
                     staves.push_back(dim);
+                    trebble = !trebble;
                 }
                 //cout << dim.row_coordinate << " " << dim.spacing << " " << abs(prev_dim.row_coordinate - dim.row_coordinate) << endl;
                 prev_dim.row_coordinate = dim.row_coordinate;
@@ -539,8 +545,9 @@ int main(int argc, char *argv[])
     }
     
     string input_filename(argv[1]);
-    SDoublePlane input_image= SImageIO::read_png_file(input_filename.c_str());
-    
+    string template_1_str = "template1.png";
+    SDoublePlane input_image = SImageIO::read_png_file(input_filename.c_str());
+    SDoublePlane template_1 = SImageIO::read_png_file(template_1_str.c_str());
     // test step 2 by applying gaussian filters to the input image
     SDoublePlane mean_filter(3,3);
     for(int i=0; i<3; i++)
@@ -560,18 +567,21 @@ int main(int argc, char *argv[])
     SImageIO::write_png_file("Threshold.png", output_image1, output_image1, output_image1);
     
     SDoublePlane output_image2 = sobel_gradient_filter(output_image1);
-    
+    output_image2 = inverse(output_image2);
     SImageIO::write_png_file("Edge.png", output_image2, output_image2, output_image2);
     
     SDoublePlane output_image3 = binaryImgGen(input_image, 150);
     vector<Dimensions> staff_lines = findStaff(output_image3);
-    write_staff_detection_image("staves.png", staff_lines, input_image);
-    
+    write_staff_detection_image("staves_withoutsobel.png", staff_lines, input_image);
+
+    //staff_lines = findStaff(output_image2);
+    //write_staff_detection_image("staves_withsobel.png", staff_lines, input_image);
+
     //- Temporary Edge Detedtion
     
     // randomly generate some detected symbols -- you'll want to replace this
     //  with your symbol detection code obviously!
-    vector<DetectedSymbol> symbols;
+    vector<DetectedSymbol> symbols = symDetectionByTemplate(input_image,template_1,staff_lines);
     for(int i=0; i<10; i++)
     {
         DetectedSymbol s;
