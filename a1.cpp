@@ -483,31 +483,36 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
         for (int v=0; v < input_image.cols(); v++)
             if (F[u][v]=max )
             {
-                w=w+1;
-                symbols[w].row = v;
-                symbols[w].col = u ;
-                //this part of the code is to identify the pitch and type
-                //if ((starting__trebble_staff=u || starting_trebble_staff+3*h<u<starting_trebble_staff+4*h) && (type condition))
+            
+        
+                //if ((starting_trebble_staff-4*h<u<starting_trebble_staff-3*h ||starting__trebble_staff=u || starting_trebble_staff+3*h<u<starting_trebble_staff+4*h)
+                || ((starting_bass_staff+4*h<u<starting_bass_staff+5*h || u=starting_bass_staff+ h || starting_bass_staff-2*h<u<starting_bass_staff-3*h     )
                 //{symbols[w].pitch= "F";}
-                //symbols[w].type = NOTEHEAD;
-                //if ((starting_trebble_staff<u<starting_trebble_staff+h || u=starting_trebble_staff+4*h) && (type condition))
+                //
+                //if ((u=starting_trebble_staff-3*h ||starting_trebble_staff<u<starting_trebble_staff+h || u=starting_trebble_staff+4*h) ||
+                 ((starting_bass_staff+h<u<starting_bass_staff+2*h || u=starting_bass_staff+6*h || u=starting_bass_staff-2*h      )
                 //{symbols[w].pitch= "E" ;
-                //symbols[w].type = NOTEHEAD ;}
-                //if ((u=starting_trebble_staff+h || starting_trebble_staff+4*h <u< starting_trebble_staff+5*h) && (type condition))
+                // }
+                //if ((starting_trebble_staff-5*h<u<starting_trebble_staff-4*h|| u=starting_trebble_staff+h || starting_trebble_staff+4*h <u< starting_trebble_staff+5*h) ||
+				 ((starting_bass_staff+5*h<u<starting_bass_staff+6*h || u=starting_bass_staff+2*h || starting_bass_staff-h <u<starting_bass_staff - 2*h    )))
                 //{symbols[w].pitch="D";
-                //symbols[w].type=NOTEHEAD ;}
-                //if ((starting_trebble_staff+h<u<starting_trebble_staff+2*h || u=starting_trebble_staff+5*h) && (type condition))
+                //}
+                //if ((u=starting_trebble_staff-2*h || starting_trebble_staff+h<u<starting_trebble_staff+2*h || u=starting_trebble_staff+5*h) ||
+				       (u=starting_bass_staff+h || starting_bass_staff-2*h<u<starting_bass_staff-3*h ||  u=starting_bass_staff-6*h))
                 //{symbols[w].pitch= "C" ;
-                //symbols[w].type = NOTEHEAD ;}
-                //if ((u=starting_trebble_staff+2*h || starting_trebble_staff+5*h <u< starting_trebble_staff+6*h) && (type condition))
+                //}
+                //if ((starting_trebble_staff-6*h<u<starting_trebble_staff-5*h||u=starting_trebble_staff+2*h || starting_trebble_staff+5*h <u< starting_trebble_staff+6*h) || 
+				      (starting_bass_staff<u<starting_bass_staff-h || u=starting_bass_staff+4*h || starting_bass_staff+7*h<u<starting_bass_staff+8*h      ))
                 //{symbols[w].pitch="B";
-                //symbols[w].type=NOTEHEAD ;}
-                //if ((starting_trebble_staff+2*h<u<starting_trebble_staff+3*h || u=starting_trebble_staff+6*h) && (type condition))
+                //}
+                //if ((u=starting_trebble_staff-h ||starting_trebble_staff+2*h<u<starting_trebble_staff+3*h || u=starting_trebble_staff+6*h) || 
+				       (u=starting_bass_staff || starting_bass_staff-3*h<u<starting_bass_staff-4*h ||  starting_bass_staff+3*h<u<starting_bass_staff+4*h))
                 //{symbols[w].pitch= "A" ;
-                //symbols[w].type = NOTEHEAD ;}
-                //if ((u=starting_trebble_staff+3*h || starting_trebble_staff+6*h <u< starting_trebble_staff+7*h) && (type condition))
+                //}
+                //if ((starting_trebble_staff-7*h<u<starting_trebble_staff-6*h||u=starting_trebble_staff+3*h || starting_trebble_staff+6*h <u< starting_trebble_staff+7*h) || 
+				       (starting_bass_staff<u<starting_bass_staff+h || u=starting_bass_staff+5*h || u=starting_bass_staff-3*h      )
                 //{symbols[w].pitch="G";
-                //symbols[w].type=NOTEHEAD ;}
+                //}
             }
     }*/
     return symbols;
