@@ -394,7 +394,7 @@ int maximum(SDoublePlane &input)
     return max;
 }
 
-vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image,const SDoublePlane &template_1,const vector<Dimensions> &dim)
+vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, const SDoublePlane &template_gen, const vector<Dimensions> &dim)
 {
     vector<DetectedSymbol> symbols;
     SDoublePlane gFilter(5,5);
@@ -402,16 +402,19 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image,co
     double thresh = 100;
     int inp_row = input_image.rows();
     int inp_col = input_image.cols();
+    int templ_row = template_gen.rows();
+    int templ_col = template_gen.cols();
 
     //compute the Hamming distance function
-    SDoublePlane binary_template_1 = binaryImgGen(template_1, thresh);
+    SDoublePlane binary_template_1 = binaryImgGen(template_gen, thresh);
     SDoublePlane binary_input_image = binaryImgGen(input_image, thresh);
     SDoublePlane inverse_template_1 = inverse(binary_template_1);
     SDoublePlane flipped_inverse_template_1 = flipper(inverse_template_1);
     SDoublePlane flipped_template_1 = flipper(binary_template_1);
     SDoublePlane inverse_input_image = inverse(binary_input_image);
     SDoublePlane F = convolve_general(input_image,flipped_template_1) + convolve_general(inverse_input_image,flipped_inverse_template_1);
-    
+
+    DetectedSymbol s;
     //find the maximum value in F
     int max;
     max = maximum(F);
@@ -426,6 +429,26 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image,co
             if (F[i][j] >= (0.95*max))
             {
               cout << " Row: " << i << " Col: " << j << " " << F[i][j] << endl;
+              s.row = i - int(ceil(templ_row/2)) - 2;
+              s.col = j - int(ceil(templ_col/2)) - 4;
+              s.width = templ_col + 3;
+              s.height = templ_row + 3;
+              if ((templ_row == 17) && (templ_col == 11))   //There should be a factor added to this when we scale up or scale down the template images
+              {
+                s.type = (Type) 0;
+              }
+              else if ((templ_row == 16) && (templ_col == 35))  //There should be a factor added to this when we scale up or scale down the template images
+              {
+                s.type = (Type) 1;
+              }
+              else
+              {
+                s.type = (Type) 2;
+              }
+
+              s.confidence = 1 - ((max - F[i][j])/(0.1*max)) ;
+              s.pitch = (rand() % 7) + 'A';
+              symbols.push_back(s);
             }
         }
     }
@@ -577,12 +600,12 @@ int main(int argc, char *argv[])
     //staff_lines = findStaff(output_image2);
     //write_staff_detection_image("staves_withsobel.png", staff_lines, input_image);
 
-    //- Temporary Edge Detedtion
+    //- Temporary Edge Detection
     
     // randomly generate some detected symbols -- you'll want to replace this
     //  with your symbol detection code obviously!
     vector<DetectedSymbol> symbols = symDetectionByTemplate(input_image,template_1,staff_lines);
-    for(int i=0; i<10; i++)
+    /*for(int i=0; i<10; i++)
     {
         DetectedSymbol s;
         s.row = rand() % input_image.rows();
@@ -594,7 +617,7 @@ int main(int argc, char *argv[])
         s.pitch = (rand() % 7) + 'A';
         symbols.push_back(s);
     }
-    
+    */
     write_detection_txt("detected.txt", symbols);
     write_detection_image("detected.png", symbols, input_image);
 }
