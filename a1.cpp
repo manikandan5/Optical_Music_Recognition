@@ -852,7 +852,8 @@ int main(int argc, char *argv[])
     // + Gaussian filter generated for smoothening image and reducing noise
     SDoublePlane gFilter(3,3);
     gFilter = createFilter();
-    // - Gaussian filter generated for smoothening image and reducing noise
+    SDoublePlane smoothed_input=convolve_general(input_image,gFilter);
+   
     
     // + Finding the edge map for all the images
     SDoublePlane output_image1 = find_edges(input_image, 200, gFilter);
@@ -879,7 +880,7 @@ int main(int argc, char *argv[])
     // - Finding Staves
     
     // + Step 4 - Template matching method
-    vector<DetectedSymbol> quarterRest = symDetectionByTemplate(input_image,template_2,"EIGTHREST", staff_lines);
+    vector<DetectedSymbol> quarterRest = symDetectionByTemplate(smoothed_input,template_2,"EIGTHREST", staff_lines);
     write_detection_image("detected4.png", quarterRest, input_image);
     // - Step 4 - Template matching method
     
