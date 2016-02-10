@@ -549,6 +549,7 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
     SDoublePlane flipped_template_1 = flipper(binary_template_1);
     SDoublePlane inverse_input_image = inverse(binary_input_image);
     SDoublePlane F = convolve_general(input_image,flipped_template_1) + convolve_general(inverse_input_image,flipped_inverse_template_1);
+    SImageIO::write_png_file("scores4.png", F, F, F);
     
     DetectedSymbol s;
     //find the maximum value in F
@@ -852,8 +853,7 @@ int main(int argc, char *argv[])
     // + Gaussian filter generated for smoothening image and reducing noise
     SDoublePlane gFilter(3,3);
     gFilter = createFilter();
-    SDoublePlane smoothed_input=convolve_general(input_image,gFilter);
-   
+    // - Gaussian filter generated for smoothening image and reducing noise
     
     // + Finding the edge map for all the images
     SDoublePlane output_image1 = find_edges(input_image, 200, gFilter);
@@ -880,7 +880,7 @@ int main(int argc, char *argv[])
     // - Finding Staves
     
     // + Step 4 - Template matching method
-    vector<DetectedSymbol> quarterRest = symDetectionByTemplate(smoothed_input,template_2,"EIGTHREST", staff_lines);
+    vector<DetectedSymbol> quarterRest = symDetectionByTemplate(input_image,template_2,"EIGTHREST", staff_lines);
     write_detection_image("detected4.png", quarterRest, input_image);
     // - Step 4 - Template matching method
     
@@ -905,7 +905,7 @@ int main(int argc, char *argv[])
      */
     
     // + Writing final output
-    write_detection_txt("detected.txt", quarterRest);
-    write_detection_image("detected.png", quarterRest, input_image);
+    write_detection_txt("detected7.txt", quarterRest);
+    write_detection_image("detected7.png", quarterRest, input_image);
     // - Writing final output
 }
