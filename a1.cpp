@@ -549,7 +549,6 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
     SDoublePlane flipped_template_1 = flipper(binary_template_1);
     SDoublePlane inverse_input_image = inverse(binary_input_image);
     SDoublePlane F = convolve_general(input_image,flipped_template_1) + convolve_general(inverse_input_image,flipped_inverse_template_1);
-    SImageIO::write_png_file("scores4.png", F, F, F);
     
     DetectedSymbol s;
     //find the maximum value in F
@@ -586,9 +585,60 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
                 
                 s.confidence = 1 - ((max - F[i][j])/(0.1*max)) ;
                 
-                
-                
-                /*if ((-4*h<u<starting_trebble_staff-3*h ||starting__trebble_staff=u || starting_trebble_staff+3*h<u<starting_trebble_staff+4*h)
+                if ((abs(prev_row-s.row) + abs(prev_col - s.col))> 2)
+                {
+                    int starting_trebble_staff = 0,starting_bass_staff = 0;
+                    int h = 0,min = 10000000,dist = 0;
+                    
+                    for(int k = 0;k<dim.size();k++)
+                    {
+                        const Dimensions &d = dim[k];
+                        dist = abs(i - d.row_coordinate);
+                        if (dist < min)
+                        {
+                            min = dist;
+                            if (d.trebble)
+                            {
+                                starting_trebble_staff = d.row_coordinate;
+                                h = d.spacing;
+                                starting_bass_staff = 0;
+                            }
+                            else
+                            {
+                                starting_bass_staff = d.row_coordinate;
+                                h = d.spacing;
+                                starting_trebble_staff = 0;
+                            }
+                        }
+                    }
+                    /*
+                    if ((i >(starting_trebble_staff - (4*h))) && (i < starting_trebble_staff - (3*h))) || (starting_trebble_staff == i) || ((i > (starting_trebble_staff + (3*h))) && (i < starting_trebble_staff + (4*h))) || ((i > (starting_bass_staff+(4*h))) && (i < (starting_bass_staff+(5*h)))) || ( i == (starting_bass_staff + h))
+                        || ((i > (starting_bass_staff- (2*h))) && (i < (starting_bass_staff- (3*h))))
+                    {
+                        s.pitch= "F";
+                    }
+                    
+                    if ((i == (starting_trebble_staff - (3*h))) \
+                        || ((i > starting_trebble_staff) && (i < (starting_trebble_staff+h))) \
+                        || (i == (starting_trebble_staff + (4*h))) \
+                        || ((i > (starting_bass_staff + h)) && (i < (starting_bass_staff+(2*h)))) \
+                        || ( i == (starting_bass_staff + (6*h))) \
+                        || (i == (starting_bass_staff- (2*h)) ))
+                    {
+                        s.pitch= "E";
+                    }
+                    
+                    
+                    if ((starting_trebble_staff-5*h<u<starting_trebble_staff-4*h|| u=starting_trebble_staff+h || starting_trebble_staff+4*h <u< starting_trebble_staff+5*h) ||
+                        ((starting_bass_staff+5*h<u<starting_bass_staff+6*h || u=starting_bass_staff+2*h || starting_bass_staff-h <u<starting_bass_staff - 2*h    )))
+                    {s.pitch="D";
+                    }
+                    
+                    symbols.push_back(s);*/
+                    
+                }
+                /*
+                 if ((starting_trebble_staff-4*h<u<starting_trebble_staff-3*h ||starting__trebble_staff=u || starting_trebble_staff+3*h<u<starting_trebble_staff+4*h)
                  || ((starting_bass_staff+4*h<u<starting_bass_staff+5*h || u=starting_bass_staff+ h || starting_bass_staff-2*h<u<starting_bass_staff-3*h     )
                  {s.pitch= "F";}
                  
@@ -612,15 +662,12 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
                  (u=starting_bass_staff || starting_bass_staff-3*h<u<starting_bass_staff-4*h ||  starting_bass_staff+3*h<u<starting_bass_staff+4*h))
                  {s.pitch= "A" ;
                  }
-                 if ((starting_trebble_staff-7*h<u<starting_trebble_staff-6*h||u=starting_trebble_staff+3*h || starting_trebble_staff+6*h <u< starting_trebble_staff+7*h) ||
+                 if ((starting_trebble_staff-7*h<u<starting_trebble_staff-6*h||u=starting_trebble_staff+3*h || starting_trebble_staff+6*h <u< starting_trebble_staff+7*h) || 
                  (starting_bass_staff<u<starting_bass_staff+h || u=starting_bass_staff+5*h || u=starting_bass_staff-3*h      )
                  {s.pitch="G";
                  }
-                 }*/
-                if ((abs(prev_row-s.row) + abs(prev_col - s.col))> 2)
-                {
-                    symbols.push_back(s);
-                }
+                 } */
+                
                 prev_row = s.row;
                 prev_col = s.col;
             }
