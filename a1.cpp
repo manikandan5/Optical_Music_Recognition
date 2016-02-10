@@ -611,62 +611,111 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
                             }
                         }
                     }
-                    /*
-                    if ((i >(starting_trebble_staff - (4*h))) && (i < starting_trebble_staff - (3*h))) || (starting_trebble_staff == i) || ((i > (starting_trebble_staff + (3*h))) && (i < starting_trebble_staff + (4*h))) || ((i > (starting_bass_staff+(4*h))) && (i < (starting_bass_staff+(5*h)))) || ( i == (starting_bass_staff + h))
-                        || ((i > (starting_bass_staff- (2*h))) && (i < (starting_bass_staff- (3*h))))
+                    if (starting_trebble_staff)
+                {
+                    if (((i >(starting_trebble_staff - (4*h))) && (i < starting_trebble_staff - (3*h))) \
+                    || (starting_trebble_staff == i) \
+                    || ((i > (starting_trebble_staff + (3*h))) && (i < starting_trebble_staff + (4*h))))
                     {
-                        s.pitch= "F";
+                        s.pitch= 'F';
                     }
-                    
+
                     if ((i == (starting_trebble_staff - (3*h))) \
-                        || ((i > starting_trebble_staff) && (i < (starting_trebble_staff+h))) \
-                        || (i == (starting_trebble_staff + (4*h))) \
-                        || ((i > (starting_bass_staff + h)) && (i < (starting_bass_staff+(2*h)))) \
-                        || ( i == (starting_bass_staff + (6*h))) \
-                        || (i == (starting_bass_staff- (2*h)) ))
+                    || ((i > starting_trebble_staff) && (i < (starting_trebble_staff+h))) \
+                    || (i == (starting_trebble_staff + (4*h))))
                     {
-                        s.pitch= "E";
+                        s.pitch= 'E';
                     }
-                    
-                    
-                    if ((starting_trebble_staff-5*h<u<starting_trebble_staff-4*h|| u=starting_trebble_staff+h || starting_trebble_staff+4*h <u< starting_trebble_staff+5*h) ||
-                        ((starting_bass_staff+5*h<u<starting_bass_staff+6*h || u=starting_bass_staff+2*h || starting_bass_staff-h <u<starting_bass_staff - 2*h    )))
-                    {s.pitch="D";
+
+                    if (((i >(starting_trebble_staff - (5*h))) && (i < starting_trebble_staff - (4*h))) \
+                    || (i == starting_trebble_staff + h ) \
+                    || ((i > (starting_trebble_staff + (4*h))) && (i < starting_trebble_staff + (5*h))))
+                    {
+                        s.pitch= 'D';
                     }
-                    
-                    symbols.push_back(s);*/
-                    
+
+                    if ((i == (starting_trebble_staff - (2*h))) \
+                    || ((i > starting_trebble_staff + h) && (i < (starting_trebble_staff+(2*h)))) \
+                    || (i == (starting_trebble_staff + (5*h))))
+                    {
+                        s.pitch= 'C';
+                    }
+
+                    if (((i >(starting_trebble_staff - (6*h))) && (i < starting_trebble_staff - (5*h))) \
+                    || (i == starting_trebble_staff + (2*h)) \
+                    || ((i > (starting_trebble_staff + (5*h))) && (i < starting_trebble_staff + (6*h))))
+                    {
+                        s.pitch= 'B';
+                    }
+
+                    if ((i == (starting_trebble_staff - h)) \
+                    || ((i > (starting_trebble_staff + (2*h))) && (i < (starting_trebble_staff + (3*h)))) )
+                    {
+                        s.pitch = 'A';
+                    }
+
+                    if (((i >(starting_trebble_staff - (7*h))) && (i < starting_trebble_staff - (6*h))) \
+                    || (i == starting_trebble_staff + (3*h)) \
+                    || ((i > (starting_trebble_staff + (6*h))) && (i < starting_trebble_staff + (7*h))))
+                    {
+                        s.pitch= 'G';
+                    }
                 }
-                /*
-                 if ((starting_trebble_staff-4*h<u<starting_trebble_staff-3*h ||starting__trebble_staff=u || starting_trebble_staff+3*h<u<starting_trebble_staff+4*h)
-                 || ((starting_bass_staff+4*h<u<starting_bass_staff+5*h || u=starting_bass_staff+ h || starting_bass_staff-2*h<u<starting_bass_staff-3*h     )
-                 {s.pitch= "F";}
-                 
-                 if ((u=starting_trebble_staff-3*h ||starting_trebble_staff<u<starting_trebble_staff+h || u=starting_trebble_staff+4*h) ||
-                 ((starting_bass_staff+h<u<starting_bass_staff+2*h || u=starting_bass_staff+6*h || u=starting_bass_staff-2*h      )
-                 {s.pitch= "E" ;
-                 }
-                 if ((starting_trebble_staff-5*h<u<starting_trebble_staff-4*h|| u=starting_trebble_staff+h || starting_trebble_staff+4*h <u< starting_trebble_staff+5*h) ||
-                 ((starting_bass_staff+5*h<u<starting_bass_staff+6*h || u=starting_bass_staff+2*h || starting_bass_staff-h <u<starting_bass_staff - 2*h    )))
-                 {s.pitch="D";
-                 }
-                 if ((u=starting_trebble_staff-2*h || starting_trebble_staff+h<u<starting_trebble_staff+2*h || u=starting_trebble_staff+5*h) ||
-                 (u=starting_bass_staff+h || starting_bass_staff-2*h<u<starting_bass_staff-3*h ||  u=starting_bass_staff-6*h))
-                 {s.pitch= "C" ;
-                 }
-                 if ((starting_trebble_staff-6*h<u<starting_trebble_staff-5*h||u=starting_trebble_staff+2*h || starting_trebble_staff+5*h <u< starting_trebble_staff+6*h) ||
-                 (starting_bass_staff<u<starting_bass_staff-h || u=starting_bass_staff+4*h || starting_bass_staff+7*h<u<starting_bass_staff+8*h      ))
-                 {s.pitch="B";
-                 }
-                 if ((u=starting_trebble_staff-h ||starting_trebble_staff+2*h<u<starting_trebble_staff+3*h || u=starting_trebble_staff+6*h) ||
-                 (u=starting_bass_staff || starting_bass_staff-3*h<u<starting_bass_staff-4*h ||  starting_bass_staff+3*h<u<starting_bass_staff+4*h))
-                 {s.pitch= "A" ;
-                 }
-                 if ((starting_trebble_staff-7*h<u<starting_trebble_staff-6*h||u=starting_trebble_staff+3*h || starting_trebble_staff+6*h <u< starting_trebble_staff+7*h) || 
-                 (starting_bass_staff<u<starting_bass_staff+h || u=starting_bass_staff+5*h || u=starting_bass_staff-3*h      )
-                 {s.pitch="G";
-                 }
-                 } */
+                else
+                {
+                    if (((i > (starting_bass_staff+(4*h))) && (i < (starting_bass_staff+(5*h)))) \
+                    || ( i == (starting_bass_staff + h)) \
+                    || ((i > (starting_bass_staff- (2*h))) && (i < (starting_bass_staff- (3*h)))))
+                    {
+                        s.pitch= 'F';
+                    }
+
+                    if (((i > (starting_bass_staff + h)) && (i < (starting_bass_staff+(2*h)))) \
+                    || ( i == (starting_bass_staff + (6*h))) \
+                    || ( i == (starting_bass_staff - (2*h))))
+                    {
+                        s.pitch= 'E';
+                    }
+
+                    if (((i > (starting_bass_staff+(5*h))) && (i < (starting_bass_staff+(6*h)))) \
+                    || ( i == (starting_bass_staff + (2*h))) \
+                    || ((i > (starting_bass_staff - h)) && (i < (starting_bass_staff- (2*h)))))
+                    {
+                        s.pitch= 'D';
+                    }
+
+                    if (( i == (starting_bass_staff + h)) \
+                    || (( i > (starting_bass_staff - (2*h))) && (i < (starting_bass_staff-(3*h)))) \
+                    || (i == (starting_bass_staff- (6*h))))
+                    {
+                        s.pitch= 'C';
+                    }
+
+                    if (((i > (starting_bass_staff - h)) && (i < (starting_bass_staff))) \
+                    || ( i == (starting_bass_staff + (4*h))) \
+                    || ((i > (starting_bass_staff + (7*h))) && (i < (starting_bass_staff + (8*h)))))
+                    {
+                        s.pitch= 'B';
+                    }
+
+                    if ((i == starting_bass_staff) \
+                    || ((i > (starting_bass_staff - (3*h))) && (i < (starting_bass_staff - (4*h)))) \
+                    || ((i > (starting_bass_staff + (3*h))) && (i < (starting_bass_staff + (4*h)))))
+                    {
+                        s.pitch = 'A';
+                    }
+
+                    if (((i > (starting_bass_staff)) && (i < (starting_bass_staff+h))) \
+                    || ( i == (starting_bass_staff + (5*h))) \
+                    || ((i == (starting_bass_staff - (3*h))) ))
+                    {
+                        s.pitch= 'G';
+                    }
+                }
+
+                symbols.push_back(s);
+
+              }
                 
                 prev_row = s.row;
                 prev_col = s.col;
