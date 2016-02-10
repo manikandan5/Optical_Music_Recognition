@@ -283,6 +283,34 @@ SDoublePlane convolve_general(const SDoublePlane &input, const SDoublePlane &fil
     return output;
 }
 
+SDoublePlane convolve_general_4(const SDoublePlane &input, const SDoublePlane &filter)
+{
+    SDoublePlane output(input.rows(), input.cols());
+    
+    SDoublePlane flipped_filter = flipper(filter);
+    
+    int filterSize = flipped_filter.rows();
+    
+    int k = (filterSize-1)/2;
+    
+    for (int i = k; i < input.rows()-k; i++)
+    {
+        for (int j = k; j < input.cols()-k; j++)
+        {
+            
+            for (int ki = -k; ki <= k; ki++ )
+            {
+                for (int kj = -k; kj<= k; kj++)
+                {
+                    output[i][j] = output[i][j] + flipped_filter[ki+k][kj+k] * input[i - ki][j - kj];
+                }
+            }
+        }
+    }
+    return output;
+}
+
+
 SDoublePlane binaryImgGen(SDoublePlane input, int threshold)
 {
     SDoublePlane output(input.rows(), input.cols());
@@ -411,7 +439,7 @@ SDoublePlane convolve_template(const SDoublePlane &input, const SDoublePlane &fi
             }
         }
     }
-        /*
+    /*
      int filterSize = flipped_filter.rows();
      
      int k = (filterSize-1)/2;
@@ -548,7 +576,7 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
     SDoublePlane flipped_inverse_template_1 = flipper(inverse_template_1);
     SDoublePlane flipped_template_1 = flipper(binary_template_1);
     SDoublePlane inverse_input_image = inverse(binary_input_image);
-    SDoublePlane F = convolve_general(input_image,flipped_template_1) + convolve_general(inverse_input_image,flipped_inverse_template_1);
+    SDoublePlane F = convolve_general_4(input_image,flipped_template_1) + convolve_general_4(inverse_input_image,flipped_inverse_template_1);
     
     DetectedSymbol s;
     //find the maximum value in F
@@ -612,110 +640,110 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
                         }
                     }
                     if (starting_trebble_staff)
-                {
-                    if (((i >(starting_trebble_staff - (4*h))) && (i < starting_trebble_staff - (3*h))) \
-                    || (starting_trebble_staff == i) \
-                    || ((i > (starting_trebble_staff + (3*h))) && (i < starting_trebble_staff + (4*h))))
                     {
-                        s.pitch= 'F';
+                        if (((i >(starting_trebble_staff - (4*h))) && (i < starting_trebble_staff - (3*h))) \
+                            || (starting_trebble_staff == i) \
+                            || ((i > (starting_trebble_staff + (3*h))) && (i < starting_trebble_staff + (4*h))))
+                        {
+                            s.pitch= 'F';
+                        }
+                        
+                        if ((i == (starting_trebble_staff - (3*h))) \
+                            || ((i > starting_trebble_staff) && (i < (starting_trebble_staff+h))) \
+                            || (i == (starting_trebble_staff + (4*h))))
+                        {
+                            s.pitch= 'E';
+                        }
+                        
+                        if (((i >(starting_trebble_staff - (5*h))) && (i < starting_trebble_staff - (4*h))) \
+                            || (i == starting_trebble_staff + h ) \
+                            || ((i > (starting_trebble_staff + (4*h))) && (i < starting_trebble_staff + (5*h))))
+                        {
+                            s.pitch= 'D';
+                        }
+                        
+                        if ((i == (starting_trebble_staff - (2*h))) \
+                            || ((i > starting_trebble_staff + h) && (i < (starting_trebble_staff+(2*h)))) \
+                            || (i == (starting_trebble_staff + (5*h))))
+                        {
+                            s.pitch= 'C';
+                        }
+                        
+                        if (((i >(starting_trebble_staff - (6*h))) && (i < starting_trebble_staff - (5*h))) \
+                            || (i == starting_trebble_staff + (2*h)) \
+                            || ((i > (starting_trebble_staff + (5*h))) && (i < starting_trebble_staff + (6*h))))
+                        {
+                            s.pitch= 'B';
+                        }
+                        
+                        if ((i == (starting_trebble_staff - h)) \
+                            || ((i > (starting_trebble_staff + (2*h))) && (i < (starting_trebble_staff + (3*h)))) )
+                        {
+                            s.pitch = 'A';
+                        }
+                        
+                        if (((i >(starting_trebble_staff - (7*h))) && (i < starting_trebble_staff - (6*h))) \
+                            || (i == starting_trebble_staff + (3*h)) \
+                            || ((i > (starting_trebble_staff + (6*h))) && (i < starting_trebble_staff + (7*h))))
+                        {
+                            s.pitch= 'G';
+                        }
                     }
-
-                    if ((i == (starting_trebble_staff - (3*h))) \
-                    || ((i > starting_trebble_staff) && (i < (starting_trebble_staff+h))) \
-                    || (i == (starting_trebble_staff + (4*h))))
+                    else
                     {
-                        s.pitch= 'E';
+                        if (((i > (starting_bass_staff+(4*h))) && (i < (starting_bass_staff+(5*h)))) \
+                            || ( i == (starting_bass_staff + h)) \
+                            || ((i > (starting_bass_staff- (2*h))) && (i < (starting_bass_staff- (3*h)))))
+                        {
+                            s.pitch= 'F';
+                        }
+                        
+                        if (((i > (starting_bass_staff + h)) && (i < (starting_bass_staff+(2*h)))) \
+                            || ( i == (starting_bass_staff + (6*h))) \
+                            || ( i == (starting_bass_staff - (2*h))))
+                        {
+                            s.pitch= 'E';
+                        }
+                        
+                        if (((i > (starting_bass_staff+(5*h))) && (i < (starting_bass_staff+(6*h)))) \
+                            || ( i == (starting_bass_staff + (2*h))) \
+                            || ((i > (starting_bass_staff - h)) && (i < (starting_bass_staff- (2*h)))))
+                        {
+                            s.pitch= 'D';
+                        }
+                        
+                        if (( i == (starting_bass_staff + h)) \
+                            || (( i > (starting_bass_staff - (2*h))) && (i < (starting_bass_staff-(3*h)))) \
+                            || (i == (starting_bass_staff- (6*h))))
+                        {
+                            s.pitch= 'C';
+                        }
+                        
+                        if (((i > (starting_bass_staff - h)) && (i < (starting_bass_staff))) \
+                            || ( i == (starting_bass_staff + (4*h))) \
+                            || ((i > (starting_bass_staff + (7*h))) && (i < (starting_bass_staff + (8*h)))))
+                        {
+                            s.pitch= 'B';
+                        }
+                        
+                        if ((i == starting_bass_staff) \
+                            || ((i > (starting_bass_staff - (3*h))) && (i < (starting_bass_staff - (4*h)))) \
+                            || ((i > (starting_bass_staff + (3*h))) && (i < (starting_bass_staff + (4*h)))))
+                        {
+                            s.pitch = 'A';
+                        }
+                        
+                        if (((i > (starting_bass_staff)) && (i < (starting_bass_staff+h))) \
+                            || ( i == (starting_bass_staff + (5*h))) \
+                            || ((i == (starting_bass_staff - (3*h))) ))
+                        {
+                            s.pitch= 'G';
+                        }
                     }
-
-                    if (((i >(starting_trebble_staff - (5*h))) && (i < starting_trebble_staff - (4*h))) \
-                    || (i == starting_trebble_staff + h ) \
-                    || ((i > (starting_trebble_staff + (4*h))) && (i < starting_trebble_staff + (5*h))))
-                    {
-                        s.pitch= 'D';
-                    }
-
-                    if ((i == (starting_trebble_staff - (2*h))) \
-                    || ((i > starting_trebble_staff + h) && (i < (starting_trebble_staff+(2*h)))) \
-                    || (i == (starting_trebble_staff + (5*h))))
-                    {
-                        s.pitch= 'C';
-                    }
-
-                    if (((i >(starting_trebble_staff - (6*h))) && (i < starting_trebble_staff - (5*h))) \
-                    || (i == starting_trebble_staff + (2*h)) \
-                    || ((i > (starting_trebble_staff + (5*h))) && (i < starting_trebble_staff + (6*h))))
-                    {
-                        s.pitch= 'B';
-                    }
-
-                    if ((i == (starting_trebble_staff - h)) \
-                    || ((i > (starting_trebble_staff + (2*h))) && (i < (starting_trebble_staff + (3*h)))) )
-                    {
-                        s.pitch = 'A';
-                    }
-
-                    if (((i >(starting_trebble_staff - (7*h))) && (i < starting_trebble_staff - (6*h))) \
-                    || (i == starting_trebble_staff + (3*h)) \
-                    || ((i > (starting_trebble_staff + (6*h))) && (i < starting_trebble_staff + (7*h))))
-                    {
-                        s.pitch= 'G';
-                    }
+                    
+                    symbols.push_back(s);
+                    
                 }
-                else
-                {
-                    if (((i > (starting_bass_staff+(4*h))) && (i < (starting_bass_staff+(5*h)))) \
-                    || ( i == (starting_bass_staff + h)) \
-                    || ((i > (starting_bass_staff- (2*h))) && (i < (starting_bass_staff- (3*h)))))
-                    {
-                        s.pitch= 'F';
-                    }
-
-                    if (((i > (starting_bass_staff + h)) && (i < (starting_bass_staff+(2*h)))) \
-                    || ( i == (starting_bass_staff + (6*h))) \
-                    || ( i == (starting_bass_staff - (2*h))))
-                    {
-                        s.pitch= 'E';
-                    }
-
-                    if (((i > (starting_bass_staff+(5*h))) && (i < (starting_bass_staff+(6*h)))) \
-                    || ( i == (starting_bass_staff + (2*h))) \
-                    || ((i > (starting_bass_staff - h)) && (i < (starting_bass_staff- (2*h)))))
-                    {
-                        s.pitch= 'D';
-                    }
-
-                    if (( i == (starting_bass_staff + h)) \
-                    || (( i > (starting_bass_staff - (2*h))) && (i < (starting_bass_staff-(3*h)))) \
-                    || (i == (starting_bass_staff- (6*h))))
-                    {
-                        s.pitch= 'C';
-                    }
-
-                    if (((i > (starting_bass_staff - h)) && (i < (starting_bass_staff))) \
-                    || ( i == (starting_bass_staff + (4*h))) \
-                    || ((i > (starting_bass_staff + (7*h))) && (i < (starting_bass_staff + (8*h)))))
-                    {
-                        s.pitch= 'B';
-                    }
-
-                    if ((i == starting_bass_staff) \
-                    || ((i > (starting_bass_staff - (3*h))) && (i < (starting_bass_staff - (4*h)))) \
-                    || ((i > (starting_bass_staff + (3*h))) && (i < (starting_bass_staff + (4*h)))))
-                    {
-                        s.pitch = 'A';
-                    }
-
-                    if (((i > (starting_bass_staff)) && (i < (starting_bass_staff+h))) \
-                    || ( i == (starting_bass_staff + (5*h))) \
-                    || ((i == (starting_bass_staff - (3*h))) ))
-                    {
-                        s.pitch= 'G';
-                    }
-                }
-
-                symbols.push_back(s);
-
-              }
                 
                 prev_row = s.row;
                 prev_col = s.col;
@@ -727,7 +755,7 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
 }
 
 
-vector<DetectedSymbol> symDetectionAfterEdges(const SDoublePlane &input_image, const SDoublePlane &template_gen, const vector<Dimensions> &dim)
+vector<DetectedSymbol> symDetectionAfterEdges(const SDoublePlane &input_image, const SDoublePlane &template_gen, const string &str, const vector<Dimensions> &dim)
 {
     vector<DetectedSymbol> symbols;
     
@@ -735,7 +763,15 @@ vector<DetectedSymbol> symDetectionAfterEdges(const SDoublePlane &input_image, c
     
     SDoublePlane dOutput(input_image.rows(),input_image.cols());
     
-    SDoublePlane fOutput(input_image.rows(),input_image.cols());
+    SDoublePlane F(input_image.rows(),input_image.cols());
+    
+    double thresh = 100;
+    int inp_row = input_image.rows();
+    int inp_col = input_image.cols();
+    int templ_row = template_gen.rows();
+    int templ_col = template_gen.cols();
+    
+
     
     for(int i=0; i<input_image.rows();i++)
     {
@@ -792,7 +828,7 @@ vector<DetectedSymbol> symDetectionAfterEdges(const SDoublePlane &input_image, c
             {
                 for(int l = 0; l<template_gen.cols()-1; l++)
                 {
-                    fOutput[i][j] = fOutput[i][j] + template_gen[k][l]*dOutput[i+k][j+l];
+                    F[i][j] = F[i][j] + template_gen[k][l]*dOutput[i+k][j+l];
                 }
             }
         }
@@ -802,32 +838,28 @@ vector<DetectedSymbol> symDetectionAfterEdges(const SDoublePlane &input_image, c
     DetectedSymbol s;
     //find the maximum value in F
     int max;
-    max = maximum(fOutput);
-    
+    max = maximum(F);
+    int prev_row = 0;
+    int prev_col = 0;
     //find indexes of maxima in F
     // These indexes will be the location where the template is most likely to be present.
-    int inp_row = input_image.rows();
-    int inp_col = input_image.cols();
-    int templ_row = template_gen.rows();
-    int templ_col = template_gen.cols();
-    
     
     for(int i= 0; i< inp_row; i++)
     {
         for(int j=0; j< inp_col; j++)
         {
-            if (fOutput[i][j] >= (0.95*max))
+            if (F[i][j] >= (0.95*max))
             {
-                //cout << " Row: " << i << " Col: " << j << " " << fOutput[i][j] << endl;
+                //cout << " Row: " << i << " Col: " << j << " " << F[i][j] << endl;
                 s.row = i - int(ceil(templ_row/2)) - 2;
                 s.col = j - int(ceil(templ_col/2)) - 4;
                 s.width = templ_col + 3;
                 s.height = templ_row + 3;
-                if ((templ_row == 17) && (templ_col == 11))   //There should be a factor added to this when we scale up or scale down the template images
+                if (str == "NOTEHEAD")   //There should be a factor added to this when we scale up or scale down the template images
                 {
                     s.type = (Type) 0;
                 }
-                else if ((templ_row == 16) && (templ_col == 35))  //There should be a factor added to this when we scale up or scale down the template images
+                else if (str == "QUARTERREST")  //There should be a factor added to this when we scale up or scale down the template images
                 {
                     s.type = (Type) 1;
                 }
@@ -836,14 +868,145 @@ vector<DetectedSymbol> symDetectionAfterEdges(const SDoublePlane &input_image, c
                     s.type = (Type) 2;
                 }
                 
-                s.confidence = 1 - ((max - fOutput[i][j])/(0.1*max)) ;
-                s.pitch = (rand() % 7) + 'A';
-                symbols.push_back(s);
+                s.confidence = 1 - ((max - F[i][j])/(0.1*max)) ;
+                
+                if ((abs(prev_row-s.row) + abs(prev_col - s.col))> 2)
+                {
+                    int starting_trebble_staff = 0,starting_bass_staff = 0;
+                    int h = 0,min = 10000000,dist = 0;
+                    
+                    for(int k = 0;k<dim.size();k++)
+                    {
+                        const Dimensions &d = dim[k];
+                        dist = abs(i - d.row_coordinate);
+                        if (dist < min)
+                        {
+                            min = dist;
+                            if (d.trebble)
+                            {
+                                starting_trebble_staff = d.row_coordinate;
+                                h = d.spacing;
+                                starting_bass_staff = 0;
+                            }
+                            else
+                            {
+                                starting_bass_staff = d.row_coordinate;
+                                h = d.spacing;
+                                starting_trebble_staff = 0;
+                            }
+                        }
+                    }
+                    if (starting_trebble_staff)
+                    {
+                        if (((i >(starting_trebble_staff - (4*h))) && (i < starting_trebble_staff - (3*h))) \
+                            || (starting_trebble_staff == i) \
+                            || ((i > (starting_trebble_staff + (3*h))) && (i < starting_trebble_staff + (4*h))))
+                        {
+                            s.pitch= 'F';
+                        }
+                        
+                        if ((i == (starting_trebble_staff - (3*h))) \
+                            || ((i > starting_trebble_staff) && (i < (starting_trebble_staff+h))) \
+                            || (i == (starting_trebble_staff + (4*h))))
+                        {
+                            s.pitch= 'E';
+                        }
+                        
+                        if (((i >(starting_trebble_staff - (5*h))) && (i < starting_trebble_staff - (4*h))) \
+                            || (i == starting_trebble_staff + h ) \
+                            || ((i > (starting_trebble_staff + (4*h))) && (i < starting_trebble_staff + (5*h))))
+                        {
+                            s.pitch= 'D';
+                        }
+                        
+                        if ((i == (starting_trebble_staff - (2*h))) \
+                            || ((i > starting_trebble_staff + h) && (i < (starting_trebble_staff+(2*h)))) \
+                            || (i == (starting_trebble_staff + (5*h))))
+                        {
+                            s.pitch= 'C';
+                        }
+                        
+                        if (((i >(starting_trebble_staff - (6*h))) && (i < starting_trebble_staff - (5*h))) \
+                            || (i == starting_trebble_staff + (2*h)) \
+                            || ((i > (starting_trebble_staff + (5*h))) && (i < starting_trebble_staff + (6*h))))
+                        {
+                            s.pitch= 'B';
+                        }
+                        
+                        if ((i == (starting_trebble_staff - h)) \
+                            || ((i > (starting_trebble_staff + (2*h))) && (i < (starting_trebble_staff + (3*h)))) )
+                        {
+                            s.pitch = 'A';
+                        }
+                        
+                        if (((i >(starting_trebble_staff - (7*h))) && (i < starting_trebble_staff - (6*h))) \
+                            || (i == starting_trebble_staff + (3*h)) \
+                            || ((i > (starting_trebble_staff + (6*h))) && (i < starting_trebble_staff + (7*h))))
+                        {
+                            s.pitch= 'G';
+                        }
+                    }
+                    else
+                    {
+                        if (((i > (starting_bass_staff+(4*h))) && (i < (starting_bass_staff+(5*h)))) \
+                            || ( i == (starting_bass_staff + h)) \
+                            || ((i > (starting_bass_staff- (2*h))) && (i < (starting_bass_staff- (3*h)))))
+                        {
+                            s.pitch= 'F';
+                        }
+                        
+                        if (((i > (starting_bass_staff + h)) && (i < (starting_bass_staff+(2*h)))) \
+                            || ( i == (starting_bass_staff + (6*h))) \
+                            || ( i == (starting_bass_staff - (2*h))))
+                        {
+                            s.pitch= 'E';
+                        }
+                        
+                        if (((i > (starting_bass_staff+(5*h))) && (i < (starting_bass_staff+(6*h)))) \
+                            || ( i == (starting_bass_staff + (2*h))) \
+                            || ((i > (starting_bass_staff - h)) && (i < (starting_bass_staff- (2*h)))))
+                        {
+                            s.pitch= 'D';
+                        }
+                        
+                        if (( i == (starting_bass_staff + h)) \
+                            || (( i > (starting_bass_staff - (2*h))) && (i < (starting_bass_staff-(3*h)))) \
+                            || (i == (starting_bass_staff- (6*h))))
+                        {
+                            s.pitch= 'C';
+                        }
+                        
+                        if (((i > (starting_bass_staff - h)) && (i < (starting_bass_staff))) \
+                            || ( i == (starting_bass_staff + (4*h))) \
+                            || ((i > (starting_bass_staff + (7*h))) && (i < (starting_bass_staff + (8*h)))))
+                        {
+                            s.pitch= 'B';
+                        }
+                        
+                        if ((i == starting_bass_staff) \
+                            || ((i > (starting_bass_staff - (3*h))) && (i < (starting_bass_staff - (4*h)))) \
+                            || ((i > (starting_bass_staff + (3*h))) && (i < (starting_bass_staff + (4*h)))))
+                        {
+                            s.pitch = 'A';
+                        }
+                        
+                        if (((i > (starting_bass_staff)) && (i < (starting_bass_staff+h))) \
+                            || ( i == (starting_bass_staff + (5*h))) \
+                            || ((i == (starting_bass_staff - (3*h))) ))
+                        {
+                            s.pitch= 'G';
+                        }
+                    }
+                    
+                    symbols.push_back(s);
+                    
+                }
+                
+                prev_row = s.row;
+                prev_col = s.col;
             }
         }
     }
-    
-    
     return symbols;
 }
 
@@ -972,16 +1135,16 @@ int main(int argc, char *argv[])
     // + Finding Staves
     SDoublePlane output_image3 = binaryImgGen(input_image, 150);
     vector<Dimensions> staff_lines = findStaff(output_image3);
-    write_staff_detection_image("staves", staff_lines, input_image);
+    write_staff_detection_image("staves.png", staff_lines, input_image);
     // - Finding Staves
     
     // + Step 4 - Template matching method
-    vector<DetectedSymbol> quarterRest = symDetectionByTemplate(input_image,template_2,"EIGTHREST", staff_lines);
-    write_detection_image("detected4.png", quarterRest, input_image);
+    vector<DetectedSymbol> symbols_4 = symDetectionByTemplate(input_image,template_1,"NOTEHEAD", staff_lines);
+    write_detection_image("detected4.png", symbols_4, input_image);
     // - Step 4 - Template matching method
     
     // + Step 5 - Template matching method after edge detection
-    vector<DetectedSymbol> symbols1 = symDetectionAfterEdges(input_image,template_1,staff_lines);
+    vector<DetectedSymbol> symbols1 = symDetectionAfterEdges(input_image,template_1,"NOTEHEAD", staff_lines);
     write_detection_image("detected5.png", symbols1, input_image);
     // - Step 5 - Template matching method after edge detection
     
@@ -1001,7 +1164,7 @@ int main(int argc, char *argv[])
      */
     
     // + Writing final output
-    write_detection_txt("detected7.txt", quarterRest);
-    write_detection_image("detected7.png", quarterRest, input_image);
+    write_detection_txt("detected7.txt", symbols_4);
+    write_detection_image("detected7.png", symbols_4, input_image);
     // - Writing final output
 }
