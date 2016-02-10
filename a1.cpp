@@ -565,7 +565,7 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
         {
             if (F[i][j] >= (0.95*max))
             {
-                cout << " Row: " << i << " Col: " << j << " " << F[i][j] << endl;
+                //cout << " Row: " << i << " Col: " << j << " " << F[i][j] << endl;
                 s.row = i - int(ceil(templ_row/2)) - 2;
                 s.col = j - int(ceil(templ_col/2)) - 4;
                 s.width = templ_col + 3;
@@ -721,7 +721,7 @@ vector<DetectedSymbol> symDetectionAfterEdges(const SDoublePlane &input_image, c
         {
             if (fOutput[i][j] >= (0.95*max))
             {
-                cout << " Row: " << i << " Col: " << j << " " << fOutput[i][j] << endl;
+                //cout << " Row: " << i << " Col: " << j << " " << fOutput[i][j] << endl;
                 s.row = i - int(ceil(templ_row/2)) - 2;
                 s.col = j - int(ceil(templ_col/2)) - 4;
                 s.width = templ_col + 3;
@@ -879,12 +879,12 @@ int main(int argc, char *argv[])
     // - Finding Staves
     
     // + Step 4 - Template matching method
-    vector<DetectedSymbol> symbols = symDetectionByTemplate(input_image,template_1,staff_lines);
-    write_detection_image("detected4.png", symbols, input_image);
+    vector<DetectedSymbol> quarterRest = symDetectionByTemplate(input_image,template_2,"EIGTHREST", staff_lines);
+    write_detection_image("detected4.png", quarterRest, input_image);
     // - Step 4 - Template matching method
     
     // + Step 5 - Template matching method after edge detection
-    vector<DetectedSymbol> symbols1 = symDetectionAfterEdges(input_image,template_1, template2, template3,staff_lines);
+    vector<DetectedSymbol> symbols1 = symDetectionAfterEdges(input_image,template_1,staff_lines);
     write_detection_image("detected5.png", symbols1, input_image);
     // - Step 5 - Template matching method after edge detection
     
@@ -904,7 +904,7 @@ int main(int argc, char *argv[])
      */
     
     // + Writing final output
-    write_detection_txt("detected.txt", symbols);
-    write_detection_image("detected.png", symbols, input_image);
+    write_detection_txt("detected.txt", quarterRest);
+    write_detection_image("detected.png", quarterRest, input_image);
     // - Writing final output
 }
