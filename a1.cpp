@@ -469,7 +469,7 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
                           
             
         
-              if ((starting_trebble_staff-4*h<u<starting_trebble_staff-3*h ||starting__trebble_staff=u || starting_trebble_staff+3*h<u<starting_trebble_staff+4*h)
+              /*if ((-4*h<u<starting_trebble_staff-3*h ||starting__trebble_staff=u || starting_trebble_staff+3*h<u<starting_trebble_staff+4*h)
                 || ((starting_bass_staff+4*h<u<starting_bass_staff+5*h || u=starting_bass_staff+ h || starting_bass_staff-2*h<u<starting_bass_staff-3*h     )
                 {s.pitch= "F";}
                 
@@ -497,7 +497,7 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
 				       (starting_bass_staff<u<starting_bass_staff+h || u=starting_bass_staff+5*h || u=starting_bass_staff-3*h      )
                 {s.pitch="G";
                 }
-            }
+            }*/
               if ((abs(prev_row-s.row) + abs(prev_col - s.col))> 2)
               {
                 symbols.push_back(s);
@@ -630,8 +630,8 @@ int main(int argc, char *argv[])
     
     // randomly generate some detected symbols -- you'll want to replace this
     //  with your symbol detection code obviously!
-    vector<DetectedSymbol> symbols = symDetectionByTemplate(input_image,template_1,"NOTEHEAD",staff_lines);
-    //vector<DetectedSymbol> quarterRest = symDetectionByTemplate(input_image,template_2,staff_lines);
+    // vector<DetectedSymbol> symbols = symDetectionByTemplate(input_image,template_1,"NOTEHEAD",staff_lines);
+    vector<DetectedSymbol> quarterRest = symDetectionByTemplate(input_image,template_2,"EIGTHREST", staff_lines);
     //vector<DetectedSymbol> eigthRest = symDetectionByTemplate(input_image,template_3,staff_lines);
     /*for(int i=0; i<10; i++)
     {
