@@ -7,6 +7,8 @@
 #include <vector>
 #include <DrawText.h>
 #include <cmath>
+#include <limits>
+#include <ctime>
 
 using namespace std;
 
@@ -32,7 +34,8 @@ using namespace std;
 //
 void overlay_rectangle(SDoublePlane &input, int _top, int _left, int _bottom, int _right, double graylevel, int width)
 {
-    for(int w=-width/2; w<=width/2; w++) {
+    for(int w=-width/2; w<=width/2; w++)
+    {
         int top = _top+w, left = _left+w, right=_right+w, bottom=_bottom+w;
         
         // if any of the coordinates are out-of-bounds, truncate them
@@ -52,7 +55,8 @@ void overlay_rectangle(SDoublePlane &input, int _top, int _left, int _bottom, in
 
 void overlay_line(SDoublePlane &input, int _top, int _space, double graylevel, int width)
 {
-    for(int w=-width/2; w<=width/2; w++) {
+    for(int w=-width/2; w<=width/2; w++)
+    {
         int top = _top+w, space=_space+w;
         
         // if any of the coordinates are out-of-bounds, truncate them
@@ -68,7 +72,8 @@ void overlay_line(SDoublePlane &input, int _top, int _space, double graylevel, i
 //  Feel free to modify.
 //
 typedef enum {NOTEHEAD=0, QUARTERREST=1, EIGHTHREST=2} Type;
-class DetectedSymbol {
+class DetectedSymbol
+{
 public:
     int row, col, width, height;
     Type type;
@@ -106,6 +111,7 @@ void  write_detection_txt(const string &filename, const vector<struct DetectedSy
 void  write_detection_image(const string &filename, const vector<DetectedSymbol> &symbols, const SDoublePlane &input)
 {
     SDoublePlane output_planes[3];
+    
     for(int i=0; i<3; i++)
         output_planes[i] = input;
     
@@ -132,6 +138,7 @@ void  write_detection_image(const string &filename, const vector<DetectedSymbol>
 void  write_staff_detection_image(const string &filename, const vector<Dimensions> &symbols, const SDoublePlane &input)
 {
     SDoublePlane output_planes[3];
+    
     for(int i=0; i<3; i++)
         output_planes[i] = input;
     
@@ -147,6 +154,19 @@ void  write_staff_detection_image(const string &filename, const vector<Dimension
     SImageIO::write_png_file(filename.c_str(), output_planes[0], output_planes[1], output_planes[2]);
 }
 
+SDoublePlane flipper(const SDoublePlane &input )
+{
+    SDoublePlane output(input.rows(),input.cols());
+    
+    for(int i=0;i<input.rows();i++)
+    {
+        for(int j=0;j<input.cols();j++)
+        {
+            output[i][j]= input[input.rows()-i-1][input.cols()-j-1];
+        }
+    }
+    return output;
+}
 
 // The rest of these functions are incomplete. These are just suggestions to
 // get you started -- feel free to add extra functions, change function
@@ -158,34 +178,39 @@ SDoublePlane convolve_separable(const SDoublePlane &input, const SDoublePlane &r
 {
     SDoublePlane output(input.rows(), input.cols());
     
-    // Convolution code here
+    SDoublePlane flipped_filter = flipper(row_filter);
     
-    return output;
-}
-
-SDoublePlane flipper(const SDoublePlane &input )
-{
-    SDoublePlane output(input.rows(),input.cols());
-    for(int i=0;i<input.rows();i++)
+    int filterSize = flipped_filter.rows();
+    
+    int k = (filterSize-1)/2;
+    
+    for (int i = 0; i < input.rows(); i++)
     {
-        for(int j=0;j<input.cols();j++)
+        for (int j = 0; j < input.cols(); j++)
         {
-            output[i][j]= input[input.rows()-i-1][input.cols()-j-1];
+            if(i >= k && j >= k && ((i+k) < input.rows()) && (j+k) < input.cols())
+            {
+                for (int ki = -k; ki <= k; ki++ )
+                {
+                    for (int kj = -k; kj<= k; kj++)
+                    {
+                        output[i][j] = output[i][j] + flipped_filter[ki+k][kj+k] * input[i - ki][j - kj];
+                    }
+                }
+            }
+            else
+            {
+                output[i][j] = 255;
+            }
+            
         }
     }
     return output;
 }
 
+
+
 SDoublePlane convolve_edge(const SDoublePlane &input, const SDoublePlane &filter)
-{
-    SDoublePlane output(input.rows(), input.cols());
-    
-    
-    return output;
-}
-// Convolve an image with a separable convolution kernel
-//
-SDoublePlane convolve_general(const SDoublePlane &input, const SDoublePlane &filter)
 {
     SDoublePlane output(input.rows(), input.cols());
     
@@ -195,20 +220,66 @@ SDoublePlane convolve_general(const SDoublePlane &input, const SDoublePlane &fil
     
     int k = (filterSize-1)/2;
     
-    for (int i = k; i < input.rows()-k; i++)
+    for (int i = 0; i < input.rows(); i++)
     {
-        for (int j = k; j < input.cols()-k; j++)
+        for (int j = 0; j < input.cols(); j++)
+        {
+            if(i >= k && j >= k && ((i+k) < input.rows()) && (j+k) < input.cols())
+            {
+                for (int ki = -k; ki <= k; ki++ )
+                {
+                    for (int kj = -k; kj<= k; kj++)
+                    {
+                        output[i][j] = output[i][j] + flipped_filter[ki+k][kj+k] * input[i - ki][j - kj];
+                    }
+                }
+            }
+            else
+            {
+                output[i][j] = 255;
+            }
+            
+        }
+    }
+    return output;
+}
+
+// Convolve an image with a separable convolution kernel
+//
+SDoublePlane convolve_general(const SDoublePlane &input, const SDoublePlane &filter)
+{
+    SDoublePlane output(input.rows(), input.cols());
+    
+    SDoublePlane flipped_filter = flipper(filter);
+    
+    SDoublePlane temp(input.rows()+2,input.cols()+2);
+    
+    for (int i = 0; i < temp.rows(); i++)
+    {
+        for (int j = 0; j < temp.cols(); j++)
         {
             
-            for (int ki = -k; ki <= k; ki++ )
+            if( i>= 1 && j>= 1 && (i < (temp.rows()-1) && (j<temp.cols()-1)))
             {
-                for (int kj = -k; kj<= k; kj++)
-                {
-                    output[i][j] = output[i][j] + flipped_filter[ki+k][kj+k] * input[i - ki][j - kj];
-                }
+                temp[i][j] = input[i-1][j-1];
+            }
+            else
+            {
+                temp[i][j] = 255;
             }
         }
     }
+    
+    for (int i = 1; i < input.rows()+1; i++)
+    {
+        for (int j = 1; j < input.cols()+1; j++)
+        {
+            
+            output[i-1][j-1] = temp[i-1][j-1] * flipped_filter[0][0] + temp[i][j-1] * flipped_filter[1][0] + temp[i+1][j-1] * flipped_filter[2][0] + temp[i-1][j] * flipped_filter[0][1] + temp[i][j] * flipped_filter[1][1] + temp[i+1][j] * flipped_filter[2][1] + temp[i-1][j+1] * flipped_filter[0][2] + temp[i][j+1] * flipped_filter[0][2] + temp[i+1][j+1] * flipped_filter[2][2];
+            
+        }
+    }
+    
     return output;
 }
 
@@ -287,13 +358,13 @@ SDoublePlane sobel_gradient_filter(const SDoublePlane &input)
         {
             sobelFilterX[i][j] = sobelFilterX[i][j] /32.0;
             sobelFilterY[i][j] = sobelFilterY[i][j] /32.0;
-    
+            
         }
     }
     
-    SDoublePlane sobelX = convolve_general(input, sobelFilterX);
+    SDoublePlane sobelX = convolve_edge(input, sobelFilterX);
     
-    SDoublePlane sobelY = convolve_general(input, sobelFilterY);
+    SDoublePlane sobelY = convolve_edge(input, sobelFilterY);
     
     SDoublePlane sobelOuput = sobelSqRt(sobelX,sobelY);
     
@@ -317,16 +388,55 @@ SDoublePlane sobel_gradient_filter(const SDoublePlane &input)
     return output;
 }
 
-
-// Apply an edge detector to an image, returns the binary edge map
-//
-SDoublePlane find_edges(const SDoublePlane &input, double thresh=0)
+SDoublePlane convolve_template(const SDoublePlane &input, const SDoublePlane &filter)
 {
     SDoublePlane output(input.rows(), input.cols());
     
-    // Implement an edge detector of your choice, e.g.
-    // use your sobel gradient operator to compute the gradient magnitude and threshold
+    SDoublePlane flipped_filter = flipper(filter);
     
+    SDoublePlane temp(input.rows()+2,input.cols()+2);
+    
+    
+    for (int i = 0; i < temp.rows(); i++)
+    {
+        for (int j = 0; j < temp.cols(); j++)
+        {
+            if((i>=1 || j>=1) && (i < (temp.rows()-2) || (j<temp.cols()-2)))
+            {
+                temp[i][j] = input[i-1][j-1];
+            }
+            else
+            {
+                temp[i][j] = 255;
+            }
+        }
+    }
+        /*
+     int filterSize = flipped_filter.rows();
+     
+     int k = (filterSize-1)/2;
+     
+     for (int i = 0; i < input.rows(); i++)
+     {
+     for (int j = 0; j < input.cols(); j++)
+     {
+     if(i >= k && j >= k && ((i+k) < input.rows()) && (j+k) < input.cols())
+     {
+     for (int ki = -k; ki <= k; ki++ )
+     {
+     for (int kj = -k; kj<= k; kj++)
+     {
+     output[i][j] = output[i][j] + flipped_filter[ki+k][kj+k] * input[i - ki][j - kj];
+     }
+     }
+     }
+     else
+     {
+     output[i][j] = 255;
+     }
+     
+     }
+     }*/
     return output;
 }
 
@@ -348,30 +458,56 @@ SDoublePlane inverse(const SDoublePlane &input )
     return output;
 }
 
+// Apply an edge detector to an image, returns the binary edge map
+//
+SDoublePlane find_edges(const SDoublePlane &input, double thresh, const SDoublePlane &gFilter)
+{
+    SDoublePlane output(input.rows(), input.cols());
+    
+    // Implement an edge detector of your choice, e.g.
+    // use your sobel gradient operator to compute the gradient magnitude and threshold
+    
+    SDoublePlane output_image = convolve_general(input, gFilter);
+    
+    SImageIO::write_png_file("Blurred.png", output_image, output_image, output_image);
+    
+    SDoublePlane output_image1 = binaryImgGen(output_image, thresh);
+    
+    SImageIO::write_png_file("Threshold.png", output_image1, output_image1, output_image1);
+    
+    SDoublePlane output_image2 = sobel_gradient_filter(output_image1);
+    
+    output = inverse(output_image2);
+    
+    return output;
+}
+
+
+
 
 SDoublePlane createFilter()
 {
-    SDoublePlane gFilter(5,5);
+    SDoublePlane gFilter(3,3);
     // initialization of standard deviation to 1.0
-    double sigma = 1.0;
-    double r, s = 2.0 * sigma * sigma;
+    double sigma = 3.0;
+    double r, s = 1.0 * sigma * sigma;
     
     // sum is for normalization
     double sum = 0.0;
     
-    for (int x = -2; x <= 2; x++)
+    for (int x = -1; x <= 1; x++)
     {
-        for(int y = -2; y <= 2; y++)
+        for(int y = -1; y <= 1; y++)
         {
             r = sqrt(x*x + y*y);
-            gFilter[x + 2][y + 2] = (exp(-(r*r)/s))/(M_PI * s);
-            sum += gFilter[x + 2][y + 2];
+            gFilter[x + 1][y + 1] = (exp(-(r*r)/s))/(M_PI * s);
+            sum += gFilter[x + 1][y + 1];
         }
     }
     
     // normalize the Kernel
-    for(int i = 0; i < 5; ++i)
-        for(int j = 0; j < 5; ++j)
+    for(int i = 0; i < 3; ++i)
+        for(int j = 0; j < 3; ++j)
             gFilter[i][j] /= sum;
     
     return gFilter;
@@ -394,24 +530,6 @@ int maximum(SDoublePlane &input)
     return max;
 }
 
-/*vector<DetectedSymbol> refineDetectedSym(const vector<DetectedSymbol> &symbols)
-{
-    for(int i=0; i<symbols.size()-2; i++)
-    {
-        const DetectedSymbol &s = symbols[i];
-        if ((abs(s.row-symbols[i+1].row) + abs(s.col-symbols[i+1].col)) < 3)
-        {
-            symbols.erase(symbols.begin()+ i);
-        }
-        else if ((abs(s.row-symbols[i+2].row) + abs(s.col-symbols[i+2].col)) < 3)
-        {
-            symbols.erase(symbols.begin()+ i);
-        }
-    }
-    return symbols;
-} */
-
-
 vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, const SDoublePlane &template_gen, const string &str, const vector<Dimensions> &dim)
 {
     vector<DetectedSymbol> symbols;
@@ -422,7 +540,7 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
     int inp_col = input_image.cols();
     int templ_row = template_gen.rows();
     int templ_col = template_gen.cols();
-
+    
     //compute the Hamming distance function
     SDoublePlane binary_template_1 = binaryImgGen(template_gen, thresh);
     SDoublePlane binary_input_image = binaryImgGen(input_image, thresh);
@@ -431,7 +549,7 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
     SDoublePlane flipped_template_1 = flipper(binary_template_1);
     SDoublePlane inverse_input_image = inverse(binary_input_image);
     SDoublePlane F = convolve_general(input_image,flipped_template_1) + convolve_general(inverse_input_image,flipped_inverse_template_1);
-
+    
     DetectedSymbol s;
     //find the maximum value in F
     int max;
@@ -440,78 +558,197 @@ vector<DetectedSymbol> symDetectionByTemplate(const SDoublePlane &input_image, c
     int prev_col = 0;
     //find indexes of maxima in F
     // These indexes will be the location where the template is most likely to be present.
-
+    
     for(int i= 0; i< inp_row; i++)
     {
         for(int j=0; j< inp_col; j++)
         {
             if (F[i][j] >= (0.95*max))
             {
-              cout << " Row: " << i << " Col: " << j << " " << F[i][j] << endl;
-              s.row = i - int(ceil(templ_row/2)) - 2;
-              s.col = j - int(ceil(templ_col/2)) - 4;
-              s.width = templ_col + 3;
-              s.height = templ_row + 3;
-              if (str == "NOTEHEAD")   //There should be a factor added to this when we scale up or scale down the template images
-              {
-                s.type = (Type) 0;
-              }
-              else if (str == "QUARTERREST")  //There should be a factor added to this when we scale up or scale down the template images
-              {
-                s.type = (Type) 1;
-              }
-              else
-              {
-                s.type = (Type) 2;
-              }
-
-              s.confidence = 1 - ((max - F[i][j])/(0.1*max)) ;
-                          
-            
-        
-              /*if ((-4*h<u<starting_trebble_staff-3*h ||starting__trebble_staff=u || starting_trebble_staff+3*h<u<starting_trebble_staff+4*h)
-                || ((starting_bass_staff+4*h<u<starting_bass_staff+5*h || u=starting_bass_staff+ h || starting_bass_staff-2*h<u<starting_bass_staff-3*h     )
-                {s.pitch= "F";}
+                cout << " Row: " << i << " Col: " << j << " " << F[i][j] << endl;
+                s.row = i - int(ceil(templ_row/2)) - 2;
+                s.col = j - int(ceil(templ_col/2)) - 4;
+                s.width = templ_col + 3;
+                s.height = templ_row + 3;
+                if (str == "NOTEHEAD")   //There should be a factor added to this when we scale up or scale down the template images
+                {
+                    s.type = (Type) 0;
+                }
+                else if (str == "QUARTERREST")  //There should be a factor added to this when we scale up or scale down the template images
+                {
+                    s.type = (Type) 1;
+                }
+                else
+                {
+                    s.type = (Type) 2;
+                }
                 
-                if ((u=starting_trebble_staff-3*h ||starting_trebble_staff<u<starting_trebble_staff+h || u=starting_trebble_staff+4*h) ||
+                s.confidence = 1 - ((max - F[i][j])/(0.1*max)) ;
+                
+                
+                
+                /*if ((-4*h<u<starting_trebble_staff-3*h ||starting__trebble_staff=u || starting_trebble_staff+3*h<u<starting_trebble_staff+4*h)
+                 || ((starting_bass_staff+4*h<u<starting_bass_staff+5*h || u=starting_bass_staff+ h || starting_bass_staff-2*h<u<starting_bass_staff-3*h     )
+                 {s.pitch= "F";}
+                 
+                 if ((u=starting_trebble_staff-3*h ||starting_trebble_staff<u<starting_trebble_staff+h || u=starting_trebble_staff+4*h) ||
                  ((starting_bass_staff+h<u<starting_bass_staff+2*h || u=starting_bass_staff+6*h || u=starting_bass_staff-2*h      )
-                {s.pitch= "E" ;
+                 {s.pitch= "E" ;
                  }
-                if ((starting_trebble_staff-5*h<u<starting_trebble_staff-4*h|| u=starting_trebble_staff+h || starting_trebble_staff+4*h <u< starting_trebble_staff+5*h) ||
-				 ((starting_bass_staff+5*h<u<starting_bass_staff+6*h || u=starting_bass_staff+2*h || starting_bass_staff-h <u<starting_bass_staff - 2*h    )))
-                {s.pitch="D";
+                 if ((starting_trebble_staff-5*h<u<starting_trebble_staff-4*h|| u=starting_trebble_staff+h || starting_trebble_staff+4*h <u< starting_trebble_staff+5*h) ||
+                 ((starting_bass_staff+5*h<u<starting_bass_staff+6*h || u=starting_bass_staff+2*h || starting_bass_staff-h <u<starting_bass_staff - 2*h    )))
+                 {s.pitch="D";
+                 }
+                 if ((u=starting_trebble_staff-2*h || starting_trebble_staff+h<u<starting_trebble_staff+2*h || u=starting_trebble_staff+5*h) ||
+                 (u=starting_bass_staff+h || starting_bass_staff-2*h<u<starting_bass_staff-3*h ||  u=starting_bass_staff-6*h))
+                 {s.pitch= "C" ;
+                 }
+                 if ((starting_trebble_staff-6*h<u<starting_trebble_staff-5*h||u=starting_trebble_staff+2*h || starting_trebble_staff+5*h <u< starting_trebble_staff+6*h) ||
+                 (starting_bass_staff<u<starting_bass_staff-h || u=starting_bass_staff+4*h || starting_bass_staff+7*h<u<starting_bass_staff+8*h      ))
+                 {s.pitch="B";
+                 }
+                 if ((u=starting_trebble_staff-h ||starting_trebble_staff+2*h<u<starting_trebble_staff+3*h || u=starting_trebble_staff+6*h) ||
+                 (u=starting_bass_staff || starting_bass_staff-3*h<u<starting_bass_staff-4*h ||  starting_bass_staff+3*h<u<starting_bass_staff+4*h))
+                 {s.pitch= "A" ;
+                 }
+                 if ((starting_trebble_staff-7*h<u<starting_trebble_staff-6*h||u=starting_trebble_staff+3*h || starting_trebble_staff+6*h <u< starting_trebble_staff+7*h) ||
+                 (starting_bass_staff<u<starting_bass_staff+h || u=starting_bass_staff+5*h || u=starting_bass_staff-3*h      )
+                 {s.pitch="G";
+                 }
+                 }*/
+                if ((abs(prev_row-s.row) + abs(prev_col - s.col))> 2)
+                {
+                    symbols.push_back(s);
                 }
-                if ((u=starting_trebble_staff-2*h || starting_trebble_staff+h<u<starting_trebble_staff+2*h || u=starting_trebble_staff+5*h) ||
-				       (u=starting_bass_staff+h || starting_bass_staff-2*h<u<starting_bass_staff-3*h ||  u=starting_bass_staff-6*h))
-                {s.pitch= "C" ;
-                }
-                if ((starting_trebble_staff-6*h<u<starting_trebble_staff-5*h||u=starting_trebble_staff+2*h || starting_trebble_staff+5*h <u< starting_trebble_staff+6*h) || 
-				      (starting_bass_staff<u<starting_bass_staff-h || u=starting_bass_staff+4*h || starting_bass_staff+7*h<u<starting_bass_staff+8*h      ))
-                {s.pitch="B";
-                }
-                if ((u=starting_trebble_staff-h ||starting_trebble_staff+2*h<u<starting_trebble_staff+3*h || u=starting_trebble_staff+6*h) || 
-				       (u=starting_bass_staff || starting_bass_staff-3*h<u<starting_bass_staff-4*h ||  starting_bass_staff+3*h<u<starting_bass_staff+4*h))
-                {s.pitch= "A" ;
-                }
-                if ((starting_trebble_staff-7*h<u<starting_trebble_staff-6*h||u=starting_trebble_staff+3*h || starting_trebble_staff+6*h <u< starting_trebble_staff+7*h) || 
-				       (starting_bass_staff<u<starting_bass_staff+h || u=starting_bass_staff+5*h || u=starting_bass_staff-3*h      )
-                {s.pitch="G";
-                }
-            }*/
-              if ((abs(prev_row-s.row) + abs(prev_col - s.col))> 2)
-              {
-                symbols.push_back(s);
-              }
-              prev_row = s.row;
-              prev_col = s.col;
+                prev_row = s.row;
+                prev_col = s.col;
             }
         }
     }
-
+    
     return symbols;
 }
 
 
+vector<DetectedSymbol> symDetectionAfterEdges(const SDoublePlane &input_image, const SDoublePlane &template_gen, const vector<Dimensions> &dim)
+{
+    vector<DetectedSymbol> symbols;
+    
+    SDoublePlane gammaFunctionOutput(input_image.rows(),input_image.cols());
+    
+    SDoublePlane dOutput(input_image.rows(),input_image.cols());
+    
+    SDoublePlane fOutput(input_image.rows(),input_image.cols());
+    
+    for(int i=0; i<input_image.rows();i++)
+    {
+        for(int j=0; j<input_image.cols();j++)
+        {
+            if(input_image[i][j]>0)
+            {
+                gammaFunctionOutput[i][j] = 0;
+            }
+            else
+            {
+                gammaFunctionOutput[i][j] = std::numeric_limits<double>::infinity();
+            }
+        }
+    }
+    
+    
+    double tempValue = std::numeric_limits<double>::infinity();
+    
+    double Value = 0;
+    
+    
+    for(int i=0; i<input_image.rows();i++)
+    {
+        for(int j=0; j<input_image.cols();j++)
+        {
+            tempValue = std::numeric_limits<double>::infinity();
+            
+            if(gammaFunctionOutput[i][j] != 0)
+            {
+                for(int a=0; a<input_image.rows(); a++)
+                {
+                    for(int b=0; b<input_image.cols(); b++)
+                    {
+                        Value = gammaFunctionOutput[a][b] + sqrt(pow((i-a),2) + pow((j-b), 2) );
+                        
+                        if(Value < tempValue)
+                        {
+                            tempValue = Value;
+                        }
+                    }
+                }
+                dOutput[i][j] = tempValue;
+            }
+        }
+    }
+    
+    for(int i=0; i<input_image.rows()-template_gen.rows();i++)
+    {
+        for(int j=0; j<input_image.cols()-template_gen.cols();j++)
+        {
+            
+            for(int k = 0; k<template_gen.rows()-1; k++)
+            {
+                for(int l = 0; l<template_gen.cols()-1; l++)
+                {
+                    fOutput[i][j] = fOutput[i][j] + template_gen[k][l]*dOutput[i+k][j+l];
+                }
+            }
+        }
+    }
+    
+    
+    DetectedSymbol s;
+    //find the maximum value in F
+    int max;
+    max = maximum(fOutput);
+    
+    //find indexes of maxima in F
+    // These indexes will be the location where the template is most likely to be present.
+    int inp_row = input_image.rows();
+    int inp_col = input_image.cols();
+    int templ_row = template_gen.rows();
+    int templ_col = template_gen.cols();
+    
+    
+    for(int i= 0; i< inp_row; i++)
+    {
+        for(int j=0; j< inp_col; j++)
+        {
+            if (fOutput[i][j] >= (0.95*max))
+            {
+                cout << " Row: " << i << " Col: " << j << " " << fOutput[i][j] << endl;
+                s.row = i - int(ceil(templ_row/2)) - 2;
+                s.col = j - int(ceil(templ_col/2)) - 4;
+                s.width = templ_col + 3;
+                s.height = templ_row + 3;
+                if ((templ_row == 17) && (templ_col == 11))   //There should be a factor added to this when we scale up or scale down the template images
+                {
+                    s.type = (Type) 0;
+                }
+                else if ((templ_row == 16) && (templ_col == 35))  //There should be a factor added to this when we scale up or scale down the template images
+                {
+                    s.type = (Type) 1;
+                }
+                else
+                {
+                    s.type = (Type) 2;
+                }
+                
+                s.confidence = 1 - ((max - fOutput[i][j])/(0.1*max)) ;
+                s.pitch = (rand() % 7) + 'A';
+                symbols.push_back(s);
+            }
+        }
+    }
+    
+    
+    return symbols;
+}
 
 vector<Dimensions> findStaff(const SDoublePlane &input)
 {
@@ -562,7 +799,7 @@ vector<Dimensions> findStaff(const SDoublePlane &input)
                 dim.row_coordinate =i;
                 dim.spacing = j;
                 dim.trebble = trebble;
-
+                
                 if ((abs(prev_dim.row_coordinate - dim.row_coordinate) > 5) && (dim.spacing > 3))
                 {
                     staves.push_back(dim);
@@ -577,6 +814,7 @@ vector<Dimensions> findStaff(const SDoublePlane &input)
     }
     return staves;
 }
+
 //
 // This main file just outputs a few test images. You'll want to change it to do
 //  something more interesting!
@@ -590,65 +828,83 @@ int main(int argc, char *argv[])
     }
     
     string input_filename(argv[1]);
+    
+    // + Template File names
     string template_1_str = "template1.png";
     string template_2_str = "template2.png";
     string template_3_str = "template3.png";
+    // - Template File names
+    
+    // + Read data from the image file as well as templates
     SDoublePlane input_image = SImageIO::read_png_file(input_filename.c_str());
     SDoublePlane template_1 = SImageIO::read_png_file(template_1_str.c_str());
     SDoublePlane template_2 = SImageIO::read_png_file(template_2_str.c_str());
     SDoublePlane template_3 = SImageIO::read_png_file(template_3_str.c_str());
-    // test step 2 by applying gaussian filters to the input image
+    // - Read data from the image file as well as templates
+    
+    // + Mean filter given part of skeleton code
     SDoublePlane mean_filter(3,3);
     for(int i=0; i<3; i++)
         for(int j=0; j<3; j++)
             mean_filter[i][j] = 1/9.0;
+    // - Mean filter given part of skeleton code
     
-    SDoublePlane gFilter(5,5);
+    // + Gaussian filter generated for smoothening image and reducing noise
+    SDoublePlane gFilter(3,3);
     gFilter = createFilter();
+    // - Gaussian filter generated for smoothening image and reducing noise
     
+    // + Finding the edge map for all the images
+    SDoublePlane output_image1 = find_edges(input_image, 200, gFilter);
     
-    SDoublePlane output_image = convolve_general(input_image, gFilter);
+    SImageIO::write_png_file("edges.png", output_image1, output_image1, output_image1);
     
-    SImageIO::write_png_file("Blurred.png", output_image, output_image, output_image);
+    SDoublePlane template1 = find_edges(template_1, 200, gFilter);
     
-    SDoublePlane output_image1 = binaryImgGen(output_image, 200);
+    SImageIO::write_png_file("Edge-template1.png", template1, template1, template1);
     
-    SImageIO::write_png_file("Threshold.png", output_image1, output_image1, output_image1);
+    SDoublePlane template2 = find_edges(template_2, 200, gFilter);
     
-    SDoublePlane output_image2 = sobel_gradient_filter(output_image1);
-    output_image2 = inverse(output_image2);
-    SImageIO::write_png_file("Edge.png", output_image2, output_image2, output_image2);
+    SImageIO::write_png_file("Edge-template2.png", template2, template2, template2);
     
+    SDoublePlane template3 = find_edges(template_3, 200, gFilter);
+    
+    SImageIO::write_png_file("Edge-template3.png", template3, template3, template3);
+    // - Finding the edge map for all the images
+    
+    // + Finding Staves
     SDoublePlane output_image3 = binaryImgGen(input_image, 150);
     vector<Dimensions> staff_lines = findStaff(output_image3);
-    write_staff_detection_image("staves_withoutsobel.png", staff_lines, input_image);
-
-    //staff_lines = findStaff(output_image2);
-    //write_staff_detection_image("staves_withsobel.png", staff_lines, input_image);
-
-    //- Temporary Edge Detection
+    write_staff_detection_image("staves", staff_lines, input_image);
+    // - Finding Staves
     
-    // randomly generate some detected symbols -- you'll want to replace this
-    //  with your symbol detection code obviously!
-    // vector<DetectedSymbol> symbols = symDetectionByTemplate(input_image,template_1,"NOTEHEAD",staff_lines);
-    vector<DetectedSymbol> quarterRest = symDetectionByTemplate(input_image,template_2,"EIGTHREST", staff_lines);
-    //vector<DetectedSymbol> eigthRest = symDetectionByTemplate(input_image,template_3,staff_lines);
+    // + Step 4 - Template matching method
+    vector<DetectedSymbol> symbols = symDetectionByTemplate(input_image,template_1,staff_lines);
+    write_detection_image("detected4.png", symbols, input_image);
+    // - Step 4 - Template matching method
+    
+    // + Step 5 - Template matching method after edge detection
+    vector<DetectedSymbol> symbols1 = symDetectionAfterEdges(input_image,template_1, template2, template3,staff_lines);
+    write_detection_image("detected5.png", symbols1, input_image);
+    // - Step 5 - Template matching method after edge detection
+    
+    
     /*for(int i=0; i<10; i++)
-    {
-        DetectedSymbol s;
-        s.row = rand() % input_image.rows();
-        s.col = rand() % input_image.cols();
-        s.width = 20;
-        s.height = 20;
-        s.type = (Type) (rand() % 3);
-        s.confidence = rand();
-        s.pitch = (rand() % 7) + 'A';
-        symbols.push_back(s);
-    }
-    */
-    //symbols = refineDetectedSym(symbols);
-    //symbols.insert(symbols.end(),quarterRest.begin(),quarterRest.end());
-    //symbols.insert(symbols.end(),eigthRest.begin(),eigthRest.end());
+     {
+     DetectedSymbol s;
+     s.row = rand() % input_image.rows();
+     s.col = rand() % input_image.cols();
+     s.width = 20;
+     s.height = 20;
+     s.type = (Type) (rand() % 3);
+     s.confidence = rand();
+     s.pitch = (rand() % 7) + 'A';
+     symbols.push_back(s);
+     }
+     */
+    
+    // + Writing final output
     write_detection_txt("detected.txt", symbols);
     write_detection_image("detected.png", symbols, input_image);
+    // - Writing final output
 }
