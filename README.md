@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-# Optical_Music_Recognition
-=======
-# a1
->>>>>>> c9761f1d2406a605206ac5c4388bd3becf66f185
+The code finds the edges on the Musical note images first by performing convolution with a sobel filter. Then it tries to find the coordinates of the notes occur using template matching. It finds the location of staff lines using Hough transform. With this data, it estimates the correct note.
